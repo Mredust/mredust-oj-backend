@@ -1,6 +1,6 @@
 -- 创建数据库
-create database if not exists mredust_init collate utf8mb4_general_ci;
-use mredust_init;
+create database if not exists mredust_oj_system collate utf8mb4_general_ci;
+use mredust_oj_system;
 
 -- 用户表
 create table if not exists `user`
@@ -24,6 +24,47 @@ values ('admin', 'acbd988c6cc18576a364047bd2fdcf70', '管理员',
         'https://raw.githubusercontent.com/Mredust/images/main/avatar/工作羊.jpg', 2, 0, 0);
 
 
+-- 题库表
+create table if not exists problem
+(
+    id            bigint        not null auto_increment comment 'id' primary key,
+    title         varchar(512)  not null comment '标题',
+    content       text          not null comment '内容',
+    difficulty    tinyint       not null default 0 comment '难度(0-简单 1-中等 2-困难)',
+    tags          varchar(1024) null comment '标签列表（json 数组）',
+    answer        text          null comment '题目答案',
+    submit_num    int           not null default 0 comment '题目提交数',
+    accepted_num  int           not null default 0 comment '题目通过数',
+    judge_case    text          null comment '判题用例（json 数组）',
+    judge_config  text          null comment '判题配置（json 对象）',
+    thumb_num     int           not null default 0 comment '点赞数',
+    favour_num    int           not null default 0 comment '收藏数',
+    user_id       bigint        not null comment '创建用户 id',
+    `create_time` datetime      not null default CURRENT_TIMESTAMP comment '创建时间',
+    `update_time` datetime      not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP comment '更新时间',
+    `is_delete`   tinyint       not null default 0 comment '是否删除（0-未删除 1-已删除）',
+    index idx_userId (user_id)
+) comment '题库表';
+
+
+-- 题目提交表
+create table if not exists problem_submit
+(
+    id            bigint       not null auto_increment comment 'id' primary key,
+    language      varchar(128) not null comment '编程语言',
+    code          text         not null comment '用户代码',
+    judge_info    text         null comment '判题信息（json 对象）',
+    status        tinyint      not null default 0 comment '判题状态（0-待判题 1-判题中 2-成功 3-失败）',
+    problem_id    bigint       not null comment '题目id',
+    user_id       bigint       not null comment '创建用户id',
+    `create_time` datetime     not null default CURRENT_TIMESTAMP comment '创建时间',
+    `update_time` datetime     not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP comment '更新时间',
+    `is_delete`   tinyint      not null default 0 comment '是否删除（0-未删除 1-已删除）',
+    index idx_problem_id (problem_id),
+    index idx_user_id (user_id)
+) comment '题目提交表';
+
+
 -- 帖子表
 create table if not exists `post`
 (
@@ -37,7 +78,7 @@ create table if not exists `post`
     `create_time` datetime      not null default CURRENT_TIMESTAMP comment '创建时间',
     `update_time` datetime      not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP comment '更新时间',
     `is_delete`   tinyint       not null default 0 comment '是否删除（0-未删除 1-已删除）',
-    index idx_userId (user_id)
+    index idx_user_id (user_id)
 ) comment '帖子表';
 
 
@@ -49,8 +90,8 @@ create table if not exists post_thumb
     `user_id`     bigint   not null comment '创建用户 id',
     `create_time` datetime not null default CURRENT_TIMESTAMP comment '创建时间',
     `update_time` datetime not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP comment '更新时间',
-    index idx_postId (post_id),
-    index idx_userId (user_id)
+    index idx_post_id (post_id),
+    index idx_user_id (user_id)
 ) comment '帖子点赞表';
 
 -- 帖子收藏表
@@ -61,6 +102,9 @@ create table if not exists post_favour
     `user_id`     bigint   not null comment '创建用户 id',
     `create_time` datetime not null default CURRENT_TIMESTAMP comment '创建时间',
     `update_time` datetime not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP comment '更新时间',
-    index idx_postId (post_id),
-    index idx_userId (user_id)
+    index idx_post_id (post_id),
+    index idx_user_id (user_id)
 ) comment '帖子收藏';
+
+
+
