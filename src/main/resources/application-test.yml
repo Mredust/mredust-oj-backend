@@ -1,0 +1,21 @@
+# 公共配置文件
+# @author <a href="https://github.com/Mredust">Mredust</a>
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mredust_init
+    username: root
+    password: motianze4
+  redis:
+    database: 3
+    host: 192.168.91.131
+    port: 6379
+    timeout: 5000
+    password: motianze4
+server:
+  port: 4093
+
+
+
+
+

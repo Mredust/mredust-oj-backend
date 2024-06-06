@@ -1,0 +1,67 @@
+# 公共配置文件
+# @author <a href="https://github.com/Mredust">Mredust</a>
+spring:
+  application:
+    name: mredust-oj-backend
+  profiles:
+    active: dev
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  session:
+    # 30 天过期
+    timeout: 2592000
+    store-type: redis
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.91.131:3306/mredust_oj_system
+    username: root
+    password: motianze4
+  redis:
+    database: 1
+    host: 192.168.91.131
+    port: 6379
+    timeout: 5000
+    password: motianze4
+  # 文件上传
+  servlet:
+    multipart:
+      # 大小限制
+      max-file-size: 10MB
+server:
+  address: localhost
+  port: 4091
+  servlet:
+    context-path: /api
+    # cookie 30 天过期
+    session:
+      cookie:
+        max-age: 2592000
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: isDelete # 全局逻辑删除的实体字段名
+      logic-delete-value: 1 # 逻辑已删除值（默认为 1）
+      logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
+
+# 接口文档配置
+knife4j:
+  enable: true
+  openapi:
+    title: "Mredust OJ System接口文档"
+    description: "在线判题系统"
+    version: 1.0
+    concat: Mredust
+    terms-of-service-url: https://github.com/Mredust
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+          - com.mredust.oj.controller
+
+
+
+

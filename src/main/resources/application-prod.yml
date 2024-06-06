@@ -1,0 +1,31 @@
+# 公共配置文件
+# @author <a href="https://github.com/Mredust">Mredust</a>
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mredust_init
+    username: root
+    password: motianze4
+  redis:
+    database: 2
+    host: 192.168.91.131
+    port: 6379
+    timeout: 5000
+    password: motianze4
+server:
+  port: 4092
+mybatis-plus:
+  configuration:
+    log-impl: ''
+
+# 接口文档配置
+knife4j:
+  enable: true
+  basic:
+    enable: true
+    username: root
+    password: root
+
+
+
+
