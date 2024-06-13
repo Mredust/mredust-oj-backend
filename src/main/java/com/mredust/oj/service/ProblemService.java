@@ -1,12 +1,13 @@
 package com.mredust.oj.service;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.mredust.oj.model.dto.problem.ProblemAddRequest;
-import com.mredust.oj.model.dto.problem.ProblemQueryRequest;
-import com.mredust.oj.model.dto.problem.ProblemUpdateRequest;
+import com.mredust.oj.model.dto.problem.*;
 import com.mredust.oj.model.entity.Problem;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mredust.oj.model.entity.User;
 import com.mredust.oj.model.vo.ProblemVO;
+import org.springframework.beans.BeanUtils;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -34,14 +35,10 @@ public interface ProblemService extends IService<Problem> {
      */
     boolean updateProblem(ProblemUpdateRequest problemUpdateRequest);
     
-
     
-    /**
-     * 分页获取题目列表
-     *
-     * @param problemQueryRequest 查询条件
-     * @return 题目分页对象
-     */
-    Page<Problem> getProblemListByPage(ProblemQueryRequest problemQueryRequest);
-
+    Page<ProblemVO> getProblemListByPage(ProblemQueryRequest problemQueryRequest,Long userId);
+    
+    
+    ProblemVO objToVo(Problem problem, Long userId);
+    
 }

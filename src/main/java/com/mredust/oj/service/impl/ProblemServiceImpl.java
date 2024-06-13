@@ -1,7 +1,7 @@
 package com.mredust.oj.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
@@ -9,25 +9,20 @@ import com.google.gson.Gson;
 import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.mapper.ProblemMapper;
-import com.mredust.oj.model.dto.problem.ProblemAddRequest;
-import com.mredust.oj.model.dto.problem.ProblemQueryRequest;
-import com.mredust.oj.model.dto.problem.ProblemUpdateRequest;
+import com.mredust.oj.model.dto.problem.*;
 import com.mredust.oj.model.entity.Problem;
-import com.mredust.oj.model.entity.User;
+import com.mredust.oj.model.entity.ProblemSubmit;
+import com.mredust.oj.model.enums.problem.ProblemSubmitStatusEnum;
 import com.mredust.oj.model.vo.ProblemVO;
 import com.mredust.oj.service.ProblemService;
+import com.mredust.oj.service.ProblemSubmitService;
 import com.mredust.oj.service.UserService;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +36,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     @Resource
     private UserService userService;
     
+    @Resource
+    private ProblemSubmitService problemSubmitService;
     
     private static final Gson GSON = new Gson();
     
@@ -75,10 +72,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     public boolean updateProblem(ProblemUpdateRequest problemUpdateRequest) {
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemUpdateRequest, problem);
-        Problem oldProblem = this.getById(problem.getId());
-        if (oldProblem == null) {
-            throw new BusinessException(ResponseCode.NOT_FOUND);
-        }
+        
         problem.setTags(GSON.toJson(problemUpdateRequest.getTags()));
         problem.setJudgeCase(GSON.toJson(problemUpdateRequest.getJudgeCase()));
         problem.setJudgeConfig(GSON.toJson(problemUpdateRequest.getJudgeConfig()));
@@ -90,8 +84,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
     
     
-
-    
     /**
      * 分页获取题目列表
      *
@@ -99,20 +91,71 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
      * @return 题目分页对象
      */
     @Override
-    public Page<Problem> getProblemListByPage(ProblemQueryRequest problemQueryRequest) {
-        String title = problemQueryRequest.getTitle();
-        String content = problemQueryRequest.getContent();
-        List<String> tagList = problemQueryRequest.getTags();
-        Long userId = problemQueryRequest.getUserId();
-        return Db.lambdaQuery(Problem.class)
-                .like(StringUtils.isNotBlank(title), Problem::getTitle, title)
-                .like(StringUtils.isNotBlank(content), Problem::getContent, content)
-                .like(CollUtil.isNotEmpty(tagList), Problem::getTags, JSONUtil.toJsonStr(tagList))
-                .eq(ObjectUtils.isNotEmpty(userId), Problem::getUserId, userId)
-                .page(new Page<>(problemQueryRequest.getPageNum(), problemQueryRequest.getPageSize()));
+    public Page<ProblemVO> getProblemListByPage(ProblemQueryRequest problemQueryRequest, Long userId) {
+        String keyword = problemQueryRequest.getKeyword();
+        List<String> tags = problemQueryRequest.getTags();
+        Integer status = problemQueryRequest.getStatus();
+        Integer difficulty = problemQueryRequest.getDifficulty();
+        long pageNum = problemQueryRequest.getPageNum();
+        long pageSize = problemQueryRequest.getPageSize();
+        String sortField = problemQueryRequest.getSortField();
+        String sortOrder = problemQueryRequest.getSortOrder();
+        Page<Problem> problemPage = new Page<>(pageNum, pageSize);
+        // 用户提交的题库
+        List<Long> submitIds = Db.lambdaQuery(ProblemSubmit.class)
+                .eq(ProblemSubmit::getUserId, userId)
+                .eq(status != null, ProblemSubmit::getStatus, status)
+                .list()
+                .stream().map(ProblemSubmit::getProblemId)
+                .collect(Collectors.toList());
+        // todo 标签查询
+        // 获取全部题库
+        Page<Problem> problemPageResult = Db.lambdaQuery(Problem.class)
+                .eq(difficulty != null, Problem::getDifficulty, difficulty)
+                .like(StringUtils.isNotBlank(keyword), Problem::getTitle, keyword).or()
+                .like(StringUtils.isNotBlank(keyword), Problem::getContent, keyword)
+                .last(StringUtils.isNotBlank(sortField), "order by " + sortField + " " + sortOrder)
+                .in(!submitIds.isEmpty(), Problem::getId, submitIds)
+                .page(problemPage);
+        
+        List<ProblemVO> records = problemPageResult.getRecords().stream()
+                .map(problem -> objToVo(problem, userId))
+                .collect(Collectors.toList());
+        Page<ProblemVO> page = new Page<>(pageNum, pageSize, problemPageResult.getTotal());
+        page.setRecords(records);
+        return page;
     }
     
-
+    /**
+     * 对象转包装类
+     *
+     * @param problem
+     * @return
+     */
+    @Override
+    public ProblemVO objToVo(Problem problem, Long userId) {
+        if (problem == null) {
+            return null;
+        }
+        ProblemVO problemVo = new ProblemVO();
+        BeanUtils.copyProperties(problem, problemVo);
+        problemVo.setTags(JSONUtil.toList(problem.getTags(), String.class));
+        problemVo.setJudgeConfig(JSONUtil.toBean(problem.getJudgeConfig(), JudgeConfig.class));
+        problemVo.setJudgeCase(JSONUtil.toList(problem.getJudgeCase(), JudgeCase.class));
+        
+        ProblemSubmit problemSubmit = problemSubmitService.getOne(new QueryWrapper<ProblemSubmit>()
+                .select("max(status) as status").lambda()
+                .eq(ProblemSubmit::getProblemId, problem.getId())
+                .eq(ProblemSubmit::getUserId, userId));
+        if (problemSubmit == null) {
+            problemVo.setStatus(ProblemSubmitStatusEnum.WAITING.getText());
+            return problemVo;
+        }
+        Integer problemSubmitStatus = problemSubmit.getStatus();
+        String text = ProblemSubmitStatusEnum.getProblemSubmitTextByCode(problemSubmitStatus);
+        problemVo.setStatus(text);
+        return problemVo;
+    }
 }
 
 

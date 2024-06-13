@@ -11,8 +11,6 @@ import com.mredust.oj.model.dto.user.*;
 import com.mredust.oj.model.entity.User;
 import com.mredust.oj.model.vo.UserVO;
 import com.mredust.oj.service.UserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +22,9 @@ import static com.mredust.oj.constant.UserConstant.ADMIN_ROLE;
 
 /**
  * 用户接口
+ *
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
-@Api(tags = "用户接口")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -42,7 +40,6 @@ public class UserController {
      * @param userRegisterRequest 用户注册请求
      * @return 用户 id
      */
-    @ApiOperation(value = "用户注册")
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
@@ -65,7 +62,6 @@ public class UserController {
      * @param request          请求
      * @return 用户信息
      */
-    @ApiOperation(value = "用户登录")
     @PostMapping("/login")
     public BaseResponse<UserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
@@ -86,7 +82,6 @@ public class UserController {
      * @param request
      * @return
      */
-    @ApiOperation(value = "用户注销")
     @PostMapping("/logout")
     public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
         if (request == null) {
@@ -102,7 +97,6 @@ public class UserController {
      * @param request 请求
      * @return 当前登录用户
      */
-    @ApiOperation(value = "获取当前登录用户信息")
     @GetMapping("/get/login-user")
     public BaseResponse<UserVO> getLoginUser(HttpServletRequest request) {
         User user = userService.getLoginUser(request);
@@ -120,7 +114,6 @@ public class UserController {
      * @param request        请求
      * @return 是否添加成功
      */
-    @ApiOperation(value = "添加用户")
     @PostMapping("/add")
     @AuthCheck(role = ADMIN_ROLE)
     public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request) {
@@ -144,7 +137,6 @@ public class UserController {
      * @param request       请求
      * @return 是否删除成功
      */
-    @ApiOperation(value = "删除用户")
     @DeleteMapping("/delete")
     @AuthCheck(role = ADMIN_ROLE)
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
@@ -161,7 +153,6 @@ public class UserController {
      * @param userUpdateRequest 更新用户信息
      * @return 是否更新成功
      */
-    @ApiOperation(value = "更新用户信息", notes = "用于管理员更新用户信息时的请求数据")
     @PutMapping("/update")
     @AuthCheck(role = ADMIN_ROLE)
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
@@ -188,7 +179,6 @@ public class UserController {
      * @param request             请求
      * @return 是否更新成功
      */
-    @ApiOperation(value = "更新个人信息", notes = "用于用户更新个人信息时的请求数据")
     @PutMapping("/update/my")
     public BaseResponse<Boolean> updateMyUser(@RequestBody UserUpdateMyRequest userUpdateMyRequest, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
@@ -218,7 +208,6 @@ public class UserController {
      * @param request 请求
      * @return 用户信息
      */
-    @ApiOperation(value = "管理员根据ID获取用户信息", notes = "用于管理员根据用户id获取用户信息")
     @GetMapping("/get")
     @AuthCheck(role = ADMIN_ROLE)
     public BaseResponse<User> getUserById(@RequestParam("id") long id, HttpServletRequest request) {
@@ -238,10 +227,9 @@ public class UserController {
      * @param userQueryRequest 用户查询参数
      * @return 用户列表
      */
-    @ApiOperation(value = "用户列表", notes = "用于管理员获取用户列表时的请求数据")
     @PostMapping("/list")
     @AuthCheck(role = ADMIN_ROLE)
-    public BaseResponse<Page<User>> getUserListByPage(@RequestBody UserQueryRequest userQueryRequest ) {
+    public BaseResponse<Page<User>> getUserListByPage(@RequestBody UserQueryRequest userQueryRequest) {
         if (userQueryRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }

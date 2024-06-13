@@ -8,8 +8,6 @@ import com.mredust.oj.model.dto.post.PostThumbAddRequest;
 import com.mredust.oj.model.entity.User;
 import com.mredust.oj.service.PostThumbService;
 import com.mredust.oj.service.UserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +21,6 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
-@Api(tags = "帖子接口")
 @RestController
 @RequestMapping("/post-thumb")
 public class PostThumbController {
@@ -37,11 +34,10 @@ public class PostThumbController {
     /**
      * 点赞 / 取消点赞
      *
-     * @param postThumbAddRequest  帖子点赞请求
-     * @param request 请求
+     * @param postThumbAddRequest 帖子点赞请求
+     * @param request             请求
      * @return resultNum 本次点赞变化数
      */
-    @ApiOperation(value = "点赞/取消点赞帖子")
     @PostMapping("/")
     public BaseResponse<Integer> postThumb(@RequestBody PostThumbAddRequest postThumbAddRequest, HttpServletRequest request) {
         if (postThumbAddRequest == null || postThumbAddRequest.getPostId() <= 0) {

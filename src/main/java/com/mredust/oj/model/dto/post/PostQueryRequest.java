@@ -15,7 +15,6 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ApiModel(value = "查询帖子请求")
 public class PostQueryRequest extends PageRequest implements Serializable {
     /**
      * id

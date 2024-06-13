@@ -1,6 +1,5 @@
 package com.mredust.oj.common;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -21,7 +20,6 @@ public class DeleteRequest implements Serializable {
      */
     @NotNull
     @Positive
-    @ApiModelProperty(value = "id")
     private Long id;
 }
 

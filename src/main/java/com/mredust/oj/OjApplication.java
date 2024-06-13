@@ -12,10 +12,10 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @SpringBootApplication
 @MapperScan("com.mredust.oj.mapper")
 @EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
-public class InitApplication {
+public class OjApplication {
     
     public static void main(String[] args) {
-        SpringApplication.run(InitApplication.class, args);
+        SpringApplication.run(OjApplication.class, args);
     }
     
 }

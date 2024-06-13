@@ -1,4 +1,4 @@
-package com.mredust.oj.model.enums;
+package com.mredust.oj.model.enums.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

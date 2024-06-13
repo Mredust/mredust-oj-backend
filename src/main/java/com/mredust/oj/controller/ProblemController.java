@@ -15,8 +15,6 @@ import com.mredust.oj.model.entity.User;
 import com.mredust.oj.model.vo.ProblemVO;
 import com.mredust.oj.service.ProblemService;
 import com.mredust.oj.service.UserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +22,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.mredust.oj.constant.UserConstant.ADMIN_ROLE;
 
@@ -32,7 +32,6 @@ import static com.mredust.oj.constant.UserConstant.ADMIN_ROLE;
  *
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
-@Api(tags = "题目接口")
 @RestController
 @Validated
 @RequestMapping("/problem")
@@ -52,7 +51,6 @@ public class ProblemController {
      * @param request           请求
      * @return 新增的题目id
      */
-    @ApiOperation(value = "创建题目")
     @PostMapping("/add")
     @AuthCheck(role = ADMIN_ROLE)
     public BaseResponse<Long> addProblem(@RequestBody @Valid ProblemAddRequest problemAddRequest, HttpServletRequest request) {
@@ -67,7 +65,6 @@ public class ProblemController {
      * @param deleteRequest 删除请求
      * @return 是否删除成功
      */
-    @ApiOperation(value = "删除题目")
     @DeleteMapping("/delete")
     @AuthCheck(role = ADMIN_ROLE)
     public BaseResponse<Boolean> deleteProblem(@RequestBody @Valid DeleteRequest deleteRequest) {
@@ -86,10 +83,13 @@ public class ProblemController {
      * @param problemUpdateRequest
      * @return
      */
-    @ApiOperation(value = "更新题目")
     @PutMapping("/update")
     @AuthCheck(role = ADMIN_ROLE)
     public BaseResponse<Boolean> updateProblem(@RequestBody @Valid ProblemUpdateRequest problemUpdateRequest) {
+        Problem problem = problemService.getById(problemUpdateRequest.getId());
+        if (problem == null) {
+            throw new BusinessException(ResponseCode.NOT_FOUND);
+        }
         boolean result = problemService.updateProblem(problemUpdateRequest);
         return Result.success(result);
     }
@@ -100,14 +100,15 @@ public class ProblemController {
      * @param id 题目id
      * @return 题目信息
      */
-    @ApiOperation(value = "根据 id 获取题目")
     @GetMapping("/get")
-    public BaseResponse<ProblemVO> getProblemById(@RequestParam("id") @NotNull long id) {
+    public BaseResponse<ProblemVO> getProblemById(@RequestParam("id") @NotNull Long id, HttpServletRequest request) {
         Problem problem = problemService.getById(id);
         if (problem == null) {
             throw new BusinessException(ResponseCode.NOT_FOUND);
         }
-        return Result.success(ProblemVO.objToVo(problem));
+        User loginUser = userService.getLoginUser(request);
+        ProblemVO problemVO = problemService.objToVo(problem, loginUser.getId());
+        return Result.success(problemVO);
     }
     
     /**
@@ -116,13 +117,13 @@ public class ProblemController {
      * @param problemQueryRequest 查询条件
      * @return 题目分页对象
      */
-    @ApiOperation(value = "分页获取题目列表")
     @PostMapping("/list")
-    public BaseResponse<Page<Problem>> getProblemListByPage(@RequestBody ProblemQueryRequest problemQueryRequest) {
+    public BaseResponse<Page<ProblemVO>> getProblemListByPage(@RequestBody ProblemQueryRequest problemQueryRequest, HttpServletRequest request) {
         if (problemQueryRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
-        Page<Problem> list = problemService.getProblemListByPage(problemQueryRequest);
+        User loginUser = userService.getLoginUser(request);
+        Page<ProblemVO> list = problemService.getProblemListByPage(problemQueryRequest, loginUser.getId());
         return Result.success(list);
     }
     

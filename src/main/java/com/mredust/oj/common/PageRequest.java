@@ -1,6 +1,6 @@
 package com.mredust.oj.common;
 
-import io.swagger.annotations.ApiModelProperty;
+import com.mredust.oj.constant.CommonConstant;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -14,12 +14,21 @@ public class PageRequest implements Serializable {
     /**
      * 当前页号
      */
-    @ApiModelProperty(value = "当前页码")
     private long pageNum = 1;
     
     /**
      * 页面大小
      */
-    @ApiModelProperty(value = "页面大小")
     private long pageSize = 10;
+    
+    
+    /**
+     * 排序字段
+     */
+    private String sortField;
+    
+    /**
+     * 排序方式
+     */
+    private String sortOrder = CommonConstant.ASC;
 }

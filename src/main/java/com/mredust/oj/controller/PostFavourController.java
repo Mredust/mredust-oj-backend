@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
-@Api(tags = "帖子接口")
 @RestController
 @RequestMapping("/post-favour")
 public class PostFavourController {
@@ -45,7 +44,6 @@ public class PostFavourController {
      * @param request              请求
      * @return resultNum 收藏变化数
      */
-    @ApiOperation(value = "收藏/取消收藏帖子")
     @PostMapping("/")
     public BaseResponse<Integer> postFavour(@RequestBody PostFavourAddRequest postFavourAddRequest, HttpServletRequest request) {
         if (postFavourAddRequest == null || postFavourAddRequest.getPostId() <= 0) {

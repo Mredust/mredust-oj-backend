@@ -18,7 +18,6 @@ public class PostFavourAddRequest implements Serializable {
     /**
      * 帖子 id
      */
-    @ApiModelProperty(value = "帖子 id", required = true)
     private Long postId;
     
     private static final long serialVersionUID = 1L;

@@ -12,12 +12,10 @@ import com.mredust.oj.model.dto.post.PostQueryRequest;
 import com.mredust.oj.model.dto.post.PostUpdateRequest;
 import com.mredust.oj.model.entity.Post;
 import com.mredust.oj.model.entity.User;
-import com.mredust.oj.model.enums.RoleEnum;
+import com.mredust.oj.model.enums.user.RoleEnum;
 import com.mredust.oj.model.vo.PostVO;
 import com.mredust.oj.service.PostService;
 import com.mredust.oj.service.UserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -30,7 +28,6 @@ import static com.mredust.oj.constant.UserConstant.ADMIN_ROLE;
  *
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
-@Api(tags = "帖子接口")
 @RestController
 @RequestMapping("/post")
 public class PostController {
@@ -49,7 +46,6 @@ public class PostController {
      * @param request        请求
      * @return 新增的帖子id
      */
-    @ApiOperation(value = "创建帖子")
     @PostMapping("/add")
     public BaseResponse<Long> addPost(@RequestBody PostAddRequest postAddRequest, HttpServletRequest request) {
         if (postAddRequest == null) {
@@ -67,7 +63,6 @@ public class PostController {
      * @param request       请求
      * @return 是否删除成功
      */
-    @ApiOperation(value = "删除帖子")
     @DeleteMapping("/delete")
     public BaseResponse<Boolean> deletePost(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
@@ -92,7 +87,6 @@ public class PostController {
      * @param postUpdateRequest
      * @return
      */
-    @ApiOperation(value = "更新帖子")
     @PutMapping("/update")
     public BaseResponse<Boolean> updatePost(@RequestBody PostUpdateRequest postUpdateRequest) {
         if (postUpdateRequest == null || postUpdateRequest.getId() <= 0) {
@@ -108,7 +102,6 @@ public class PostController {
      * @param id 帖子id
      * @return 帖子信息
      */
-    @ApiOperation(value = "根据 id 获取帖子")
     @GetMapping("/get")
     public BaseResponse<PostVO> getPostById(long id) {
         if (id <= 0) {
@@ -127,7 +120,6 @@ public class PostController {
      * @param postQueryRequest 查询条件
      * @return 帖子分页对象
      */
-    @ApiOperation(value = "分页获取帖子列表（管理员）")
     @PostMapping("/list")
     @AuthCheck(role = ADMIN_ROLE)
     public BaseResponse<Page<Post>> getPostListByPage(@RequestBody PostQueryRequest postQueryRequest) {
@@ -145,7 +137,6 @@ public class PostController {
      * @param request          请求
      * @return 帖子分页对象
      */
-    @ApiOperation(value = "分页获取帖子列表（用户）")
     @PostMapping("/list/vo")
     public BaseResponse<Page<PostVO>> getPostVoPage(@RequestBody PostQueryRequest postQueryRequest, HttpServletRequest request) {
         if (postQueryRequest == null) {

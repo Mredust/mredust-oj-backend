@@ -1,11 +1,8 @@
 package com.mredust.oj.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.mredust.oj.model.dto.problem.JudgeCase;
 import com.mredust.oj.model.dto.problem.JudgeConfig;
-import com.mredust.oj.model.entity.Problem;
 import lombok.Data;
-import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -37,7 +34,12 @@ public class ProblemVO implements Serializable {
     /**
      * 难度
      */
-    private String difficulty;
+    private Integer difficulty;
+    
+    /**
+     * 状态（已通过、尝试过、未开始）
+     */
+    private String status;
     
     /**
      * 标签列表
@@ -94,23 +96,6 @@ public class ProblemVO implements Serializable {
      */
     private Date updateTime;
     
-    /**
-     * 对象转包装类
-     *
-     * @param problem
-     * @return
-     */
-    public static ProblemVO objToVo(Problem problem) {
-        if (problem == null) {
-            return null;
-        }
-        ProblemVO problemVo = new ProblemVO();
-        BeanUtils.copyProperties(problem, problemVo);
-        problemVo.setTags(JSONUtil.toList(problem.getTags(), String.class));
-        problemVo.setJudgeConfig(JSONUtil.toBean(problem.getJudgeConfig(), JudgeConfig.class));
-        problemVo.setJudgeCase(JSONUtil.toList(problem.getJudgeCase(), JudgeCase.class));
-        return problemVo;
-    }
     
     private static final long serialVersionUID = 1L;
 }

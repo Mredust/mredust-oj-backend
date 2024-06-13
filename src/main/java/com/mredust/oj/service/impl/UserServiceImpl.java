@@ -9,7 +9,7 @@ import com.mredust.oj.mapper.UserMapper;
 import com.mredust.oj.model.dto.user.UserAddRequest;
 import com.mredust.oj.model.dto.user.UserQueryRequest;
 import com.mredust.oj.model.entity.User;
-import com.mredust.oj.model.enums.AccountStatusEnum;
+import com.mredust.oj.model.enums.user.AccountStatusEnum;
 import com.mredust.oj.model.vo.UserVO;
 import com.mredust.oj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -242,6 +242,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Integer sex = userQueryRequest.getSex();
         Integer status = userQueryRequest.getStatus();
         Integer role = userQueryRequest.getRole();
+        String sortField = userQueryRequest.getSortField();
+        String sortOrder = userQueryRequest.getSortOrder();
         long pageNum = userQueryRequest.getPageNum();
         long pageSize = userQueryRequest.getPageSize();
         
@@ -253,6 +255,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(role != null, User::getRole, role)
                 .eq(sex != null, User::getSex, sex)
                 .eq(status != null, User::getStatus, status)
+                .last(StringUtils.isNotBlank(sortField), "order by " + sortField + " " + sortOrder)
                 .page(userPage);
     }
 }

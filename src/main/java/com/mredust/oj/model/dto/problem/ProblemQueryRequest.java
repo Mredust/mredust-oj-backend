@@ -15,37 +15,25 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ApiModel(value = "查询题目请求")
 public class ProblemQueryRequest extends PageRequest implements Serializable {
     /**
-     * id
+     * 关键词
      */
-    private Long id;
-    
-    /**
-     * 标题
-     */
-    private String title;
-    
-    /**
-     * 内容
-     */
-    private String content;
+    private String keyword;
     
     /**
      * 标签列表
      */
     private List<String> tags;
-    
     /**
-     * 题目答案
+     * 状态
      */
-    private String answer;
-    
+    private Integer status;
     /**
-     * 创建用户 id
+     * 难度
      */
-    private Long userId;
+    private Integer difficulty;
+    
     
     private static final long serialVersionUID = 1L;
 }

@@ -1,8 +1,7 @@
 package com.mredust.oj.model.dto.problem;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -18,7 +17,6 @@ import java.util.List;
  */
 @Data
 @NotNull
-@ApiModel(value = "更新题目请求")
 public class ProblemUpdateRequest implements Serializable {
     
     /**
@@ -30,14 +28,14 @@ public class ProblemUpdateRequest implements Serializable {
      * 标题
      */
     @NotBlank
-    @Max(message = "标题过长", value = 50)
+    @Length(message = "标题过长", max = 50)
     private String title;
     
     /**
      * 内容
      */
     @NotBlank
-    @Max(message = "内容过长", value = 5000)
+    @Length(message = "内容过长", max = 5000)
     private String content;
     
     /**
