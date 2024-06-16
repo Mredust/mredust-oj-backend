@@ -25,8 +25,11 @@ public enum ResponseCode {
     PARAMS_ERROR(400, "请求参数错误"),
     PARAMS_NULL(400, "请求数据为空"),
     NOT_LOGIN(401, "未登录"),
-    ACCOUNT_BAN(403, "账号封禁");
+    ACCOUNT_BAN(403, "账号封禁"),
     
+    // oj
+    SUBMIT_ERROR(500, "提交判题失败"),
+    DANGER_CODE(401, "危险代码");
     
     private final int code;
     private final String message;

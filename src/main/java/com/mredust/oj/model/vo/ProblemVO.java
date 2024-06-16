@@ -46,10 +46,6 @@ public class ProblemVO implements Serializable {
      */
     private List<String> tags;
     
-    /**
-     * 题解
-     */
-    private String answer;
     
     /**
      * 题目提交数

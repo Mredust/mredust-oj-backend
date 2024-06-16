@@ -1,5 +1,6 @@
 package com.mredust.oj.service.impl;
 
+import cn.hutool.core.stream.CollectorUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -22,7 +23,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -102,12 +105,15 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         String sortOrder = problemQueryRequest.getSortOrder();
         Page<Problem> problemPage = new Page<>(pageNum, pageSize);
         // 用户提交的题库
-        List<Long> submitIds = Db.lambdaQuery(ProblemSubmit.class)
-                .eq(ProblemSubmit::getUserId, userId)
-                .eq(status != null, ProblemSubmit::getStatus, status)
-                .list()
-                .stream().map(ProblemSubmit::getProblemId)
-                .collect(Collectors.toList());
+        Set<Long> submitIds = Collections.emptySet();
+        if (status != null) {
+            submitIds = Db.lambdaQuery(ProblemSubmit.class)
+                    .eq(ProblemSubmit::getUserId, userId)
+                    .eq(ProblemSubmit::getStatus, status)
+                    .list()
+                    .stream().map(ProblemSubmit::getProblemId)
+                    .collect(Collectors.toSet());
+        }
         // todo 标签查询
         // 获取全部题库
         Page<Problem> problemPageResult = Db.lambdaQuery(Problem.class)

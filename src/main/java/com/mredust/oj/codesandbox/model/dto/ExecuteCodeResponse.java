@@ -1,4 +1,4 @@
-package com.mredust.oj.judge.codesandbox.model;
+package com.mredust.oj.codesandbox.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,7 @@ import java.util.List;
 
 /**
  * 代码执行响应
+ *
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
 @Data
@@ -16,11 +17,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExecuteCodeResponse {
-    
     /**
-     * 输出列表
+     * 执行状态
      */
-    private List<String> outputList;
+    private Integer status;
     
     /**
      * 接口信息
@@ -28,12 +28,23 @@ public class ExecuteCodeResponse {
     private String message;
     
     /**
-     * 执行状态
+     * 接口信息
      */
-    private Integer status;
+    private String errorMessage;
     
     /**
-     * 判题信息
+     * 运行时间
      */
-    private JudgeInfo judgeInfo;
+    private Long time;
+    
+    /**
+     * 执行时间
+     */
+    private Long memory;
+    
+    /**
+     * 执行结果列表
+     */
+    private List<String> outputList;
+    
 }

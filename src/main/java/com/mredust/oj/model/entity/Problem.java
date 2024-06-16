@@ -41,12 +41,7 @@ public class Problem implements Serializable {
      * 标签列表（json 数组）
      */
     private String tags;
-
-    /**
-     * 题目答案
-     */
-    private String answer;
-
+    
     /**
      * 题目提交数
      */

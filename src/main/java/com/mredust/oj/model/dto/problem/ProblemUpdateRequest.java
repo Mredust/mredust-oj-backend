@@ -41,8 +41,8 @@ public class ProblemUpdateRequest implements Serializable {
     /**
      * 难度
      */
-    @NotBlank
-    private String difficulty;
+    @NotNull
+    private Integer difficulty;
     
     /**
      * 标签列表

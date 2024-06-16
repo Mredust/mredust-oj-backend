@@ -36,6 +36,10 @@ public class Result {
         return new BaseResponse<>(ResponseCode.FAIL);
     }
     
+    public static <T> BaseResponse<T> fail(T data) {
+        return new BaseResponse<>(ResponseCode.FAIL, data);
+    }
+    
     public static <T> BaseResponse<T> fail(String msg) {
         return new BaseResponse<>(ResponseCode.FAIL, msg);
     }

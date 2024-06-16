@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 
 /**
@@ -52,7 +54,8 @@ public class GlobalExceptionHandler {
         List<FieldError> fieldErrors = ex.getFieldErrors();
         if (!fieldErrors.isEmpty()) {
             FieldError error = fieldErrors.get(0);
-            String msg = String.format("参数%s", error.getDefaultMessage());
+            String repStr = Objects.requireNonNull(error.getDefaultMessage()).replace("null", "空");
+            String msg = String.format("参数%s", repStr);
             return Result.fail(ResponseCode.PARAMS_ERROR, msg);
         }
         return Result.fail(ResponseCode.PARAMS_ERROR);

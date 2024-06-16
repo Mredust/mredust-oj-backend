@@ -1,0 +1,10 @@
+package com.mredust.oj.codesandbox.constant;
+
+/**
+ * @author <a href="https://github.com/Mredust">Mredust</a>
+ */
+public interface PythonConstant {
+    String PYTHON = "python";
+    String PYTHON_DEFAULT_NAME = "Main.py";
+    String PYTHON_RUN_CMD = "python %s %s";
+}

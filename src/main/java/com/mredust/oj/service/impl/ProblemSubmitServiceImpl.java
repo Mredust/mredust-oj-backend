@@ -1,20 +1,36 @@
 package com.mredust.oj.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.mredust.oj.codesandbox.model.dto.ExecuteCodeRequest;
+import com.mredust.oj.codesandbox.model.dto.ExecuteCodeResponse;
+import com.mredust.oj.codesandbox.model.enums.ExecuteCodeStatusEnum;
+import com.mredust.oj.codesandbox.service.CodeSandboxService;
 import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.mapper.ProblemMapper;
 import com.mredust.oj.mapper.ProblemSubmitMapper;
+import com.mredust.oj.model.dto.problem.JudgeCase;
+import com.mredust.oj.model.dto.problem.JudgeConfig;
 import com.mredust.oj.model.dto.problemsubmit.ProblemSubmitAddRequest;
 import com.mredust.oj.model.entity.Problem;
 import com.mredust.oj.model.entity.ProblemSubmit;
 import com.mredust.oj.model.entity.User;
+import com.mredust.oj.model.enums.problem.JudgeInfoEnum;
 import com.mredust.oj.model.enums.problem.ProblemSubmitStatusEnum;
+import com.mredust.oj.model.vo.JudgeInfo;
+import com.mredust.oj.model.vo.ProblemSubmitVO;
 import com.mredust.oj.service.ProblemSubmitService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 /**
  * @author Mredust
@@ -28,8 +44,11 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
     @Resource
     private ProblemMapper problemMapper;
     
+    @Resource
+    private CodeSandboxService codeSandboxService;
+    
     @Override
-    public ProblemSubmit problemSubmit(ProblemSubmitAddRequest problemSubmitAddRequest, User loginUser) {
+    public ProblemSubmitVO problemSubmit(ProblemSubmitAddRequest problemSubmitAddRequest, User loginUser) {
         // 校验编程语言是否合法
         String language = problemSubmitAddRequest.getLanguage();
         if (language == null) {
@@ -57,20 +76,118 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         // 是否已提交题目
         // 每个用户串行提交题目
         ProblemSubmit problemSubmit = new ProblemSubmit();
-        problemSubmit.setUserId(userId);
         problemSubmit.setProblemId(problemId);
-        problemSubmit.setCode(problemSubmitAddRequest.getCode());
         problemSubmit.setLanguage(language);
+        problemSubmit.setCode(problemSubmitAddRequest.getCode());
+        problemSubmit.setUserId(userId);
         // 设置初始状态
         problemSubmit.setStatus(ProblemSubmitStatusEnum.WAITING.getCode());
-        problemSubmit.setJudgeInfo("{}");
         boolean save = this.save(problemSubmit);
         if (!save) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR, "数据插入失败");
         }
         // 执行判题服务
-        // ProblemSubmit submitResult = judgeService.doJudge(problemSubmit, currentUser.getAccessKey(), currentUser.getSecretKey());
-        return null;
+        return handleJudge(problemSubmit, problem);
+    }
+    
+    private ProblemSubmitVO handleJudge(ProblemSubmit problemSubmit, Problem problem) {
+        problemSubmit.setStatus(ProblemSubmitStatusEnum.RUNNING.getCode());
+        boolean flag = this.updateById(problemSubmit);
+        if (!flag) {
+            throw new BusinessException(ResponseCode.SYSTEM_ERROR, "题目状态更新失败");
+        }
+        // 调用沙箱，获取到执行结果
+        String language = problemSubmit.getLanguage();
+        String code = problemSubmit.getCode();
+        // 获取输入用例
+        List<JudgeCase> judgeCaseList = JSONUtil.toList(problem.getJudgeCase(), JudgeCase.class);
+        List<String> inputList = judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
+        List<String> answerOutputList = judgeCaseList.stream().map(JudgeCase::getOutput).collect(Collectors.toList());
+        ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
+                .code(code)
+                .language(language)
+                .inputList(inputList)
+                .build();
+        ExecuteCodeResponse response = codeSandboxService.executeCode(executeCodeRequest);
+        Integer status = response.getStatus();
+        String message = response.getMessage();
+        String errorMessage = response.getErrorMessage();
+        Long time = response.getTime();
+        Long memory = response.getMemory();
+        List<String> outputList = response.getOutputList();
+        
+        // 根据沙箱的执行结果，设置题目的判题状态和信息
+        ProblemSubmitVO problemSubmitVO = new ProblemSubmitVO();
+        BeanUtil.copyProperties(problemSubmit, problemSubmitVO);
+        JudgeConfig problemJudgeConfig = JSONUtil.toBean(problem.getJudgeConfig(), JudgeConfig.class);
+        JudgeConfig judgeConfig = new JudgeConfig();
+        judgeConfig.setTimeLimit(time);
+        judgeConfig.setMemoryLimit(memory);
+        JudgeInfo judgeInfo = new JudgeInfo();
+        judgeInfo.setStatus(status);
+        // 执行成功
+        if (status.equals(ExecuteCodeStatusEnum.SUCCESS.getCode())) {
+            // 判题配置
+            if (answerOutputList.size() == outputList.size()) {
+                for (int i = 0; i < answerOutputList.size(); i++) {
+                    if (time > problemJudgeConfig.getTimeLimit()) {
+                        judgeInfo.setMessage(JudgeInfoEnum.TIME_LIMIT_EXCEEDED.getText());
+                        judgeInfo.setJudgeConfig(judgeConfig);
+                        problemSubmitVO.setJudgeInfo(judgeInfo);
+                        return problemSubmitVO;
+                    }
+                    if (!answerOutputList.get(i).equals(outputList.get(i))) {
+                        // 遇到了一个没通过的
+                        problemSubmit.setStatus(ProblemSubmitStatusEnum.FAILED.getCode());
+                        problemSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
+                        judgeInfo.setMessage(ProblemSubmitStatusEnum.FAILED.getStatus());
+                        problemSubmitVO.setJudgeInfo(judgeInfo);
+                        updateById(problemSubmit);
+                        return problemSubmitVO;
+                    }
+                }
+            }
+        } else if (status.equals(ExecuteCodeStatusEnum.RUN_FAILED.getCode())) {
+            judgeInfo.setMessage(errorMessage);
+        } else if (status.equals(ExecuteCodeStatusEnum.COMPILE_FAILED.getCode())) {
+            judgeInfo.setMessage(errorMessage);
+        }
+        
+        // 5、修改数据库中的判题结果
+        boolean isSuccess = ExecuteCodeStatusEnum.SUCCESS.getCode().equals(status);
+        problemSubmit.setStatus(isSuccess ?
+                ProblemSubmitStatusEnum.SUCCEED.getCode() :
+                ProblemSubmitStatusEnum.FAILED.getCode());
+        judgeInfo.setMessage(message);
+        judgeInfo.setJudgeConfig(judgeConfig);
+        problemSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
+        flag = this.updateById(problemSubmit);
+        if (!flag) {
+            throw new BusinessException(ResponseCode.SYSTEM_ERROR, "题目状态更新失败");
+        }
+        // 6、修改题目的通过数
+        if (isSuccess) {
+            problemMapper.update(null, new UpdateWrapper<Problem>().setSql("accepted_num = accepted_num + 1").eq("id", problem.getId()));
+        }
+        problemSubmitVO.setStatus(isSuccess ?
+                ProblemSubmitStatusEnum.SUCCEED.getCode() :
+                ProblemSubmitStatusEnum.FAILED.getCode());
+        problemSubmitVO.setJudgeInfo(judgeInfo);
+        return problemSubmitVO;
+    }
+    
+    @Override
+    public ProblemSubmitVO getProblemSubmitVoById(Long id) {
+        ProblemSubmit problemSubmit = Db.lambdaQuery(ProblemSubmit.class)
+                .eq(id != null, ProblemSubmit::getId, id).one();
+        // 返回脱敏信息
+        if (problemSubmit == null) {
+            throw new BusinessException(ResponseCode.NOT_FOUND);
+        }
+        ProblemSubmitVO problemSubmitVO = new ProblemSubmitVO();
+        BeanUtils.copyProperties(problemSubmit, problemSubmitVO);
+        problemSubmitVO.setJudgeInfo(JSONUtil.toBean(problemSubmit.getJudgeInfo(), JudgeInfo.class));
+        return problemSubmitVO;
     }
 }
 

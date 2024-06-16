@@ -1,4 +1,4 @@
-package com.mredust.oj.judge.codesandbox.model;
+package com.mredust.oj.codesandbox.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
