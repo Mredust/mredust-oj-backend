@@ -1,9 +1,9 @@
 package com.mredust.oj.codesandbox.service.impl;
 
-import com.mredust.oj.codesandbox.core.CodeSandboxFactory;
+import com.mredust.oj.codesandbox.core.strategy.SimpleCodeSandboxFactory;
 import com.mredust.oj.codesandbox.core.template.CodeSandboxTemplate;
-import com.mredust.oj.codesandbox.model.dto.ExecuteCodeRequest;
-import com.mredust.oj.codesandbox.model.dto.ExecuteCodeResponse;
+import com.mredust.oj.codesandbox.model.dto.ExecuteRequest;
+import com.mredust.oj.codesandbox.model.dto.ExecuteResponse;
 import com.mredust.oj.codesandbox.model.enums.LanguageEnum;
 import com.mredust.oj.codesandbox.service.CodeSandboxService;
 import com.mredust.oj.common.ResponseCode;
@@ -20,14 +20,14 @@ import java.util.List;
 public class CodeSandboxServiceImpl implements CodeSandboxService {
     
     @Override
-    public ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest) {
-        List<String> inputList = executeCodeRequest.getInputList();
+    public ExecuteResponse executeCode(ExecuteRequest executeCodeRequest) {
+        List<String[]> testCaseList = executeCodeRequest.getTestCaseList();
         String code = executeCodeRequest.getCode();
         String language = executeCodeRequest.getLanguage();
         if (StringUtils.isBlank(language)) {
             throw new BusinessException(ResponseCode.PARAMS_NULL, "语言不能为空");
         }
-        CodeSandboxTemplate codeSandboxTemplate = CodeSandboxFactory.getCodeSandboxTemplate(LanguageEnum.getLanguageEnum(language));
-        return codeSandboxTemplate.executeCode(inputList, code);
+        CodeSandboxTemplate codeSandboxTemplate = new SimpleCodeSandboxFactory().getCodeSandboxTemplate(LanguageEnum.valueOf(language.toUpperCase()));
+        return codeSandboxTemplate.executeCode(code, testCaseList);
     }
 }

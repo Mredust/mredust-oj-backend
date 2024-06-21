@@ -15,8 +15,8 @@ public enum ProblemSubmitLanguageEnum {
     JAVA("Java", "java"),
     CPLUSPLUS("C++", "cpp"),
     GOLANG("JavaScript", "javascript"),
-    PYTHON("Python", "python");
-    private final String text;
+    PYTHON("Python3", "python3");
+    private final String language;
     
     private final String value;
 }

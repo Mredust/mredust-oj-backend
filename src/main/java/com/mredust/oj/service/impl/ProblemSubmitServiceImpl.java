@@ -5,9 +5,9 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.mredust.oj.codesandbox.model.dto.ExecuteCodeRequest;
-import com.mredust.oj.codesandbox.model.dto.ExecuteCodeResponse;
-import com.mredust.oj.codesandbox.model.enums.ExecuteCodeStatusEnum;
+import com.mredust.oj.codesandbox.model.dto.ExecuteRequest;
+import com.mredust.oj.codesandbox.model.dto.ExecuteResponse;
+import com.mredust.oj.codesandbox.model.enums.ExecuteResponseEnum;
 import com.mredust.oj.codesandbox.service.CodeSandboxService;
 import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.exception.BusinessException;
@@ -101,42 +101,48 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         String code = problemSubmit.getCode();
         // 获取输入用例
         List<JudgeCase> judgeCaseList = JSONUtil.toList(problem.getJudgeCase(), JudgeCase.class);
-        List<String> inputList = judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
+        // List<String> inputList = judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
+        List<String[]> inputList = judgeCaseList.stream()
+                .map(JudgeCase::getInput)
+                .map(input -> input.split(","))  // 根据具体分隔符进行拆分
+                .collect(Collectors.toList());
+        
         List<String> answerOutputList = judgeCaseList.stream().map(JudgeCase::getOutput).collect(Collectors.toList());
-        ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
+        ExecuteRequest executeCodeRequest = ExecuteRequest.builder()
                 .code(code)
                 .language(language)
-                .inputList(inputList)
+                .testCaseList(inputList)
                 .build();
-        ExecuteCodeResponse response = codeSandboxService.executeCode(executeCodeRequest);
-        Integer status = response.getStatus();
-        String message = response.getMessage();
-        String errorMessage = response.getErrorMessage();
-        Long time = response.getTime();
-        Long memory = response.getMemory();
-        List<String> outputList = response.getOutputList();
+        ExecuteResponse response = codeSandboxService.executeCode(executeCodeRequest);
+        Integer statusCode = response.getCode();
+        String msg = response.getMsg();
+        List<String> stdout = response.getStdout();
+        String stderr = response.getStderr();
+        Long runTime = response.getRunTime();
+        Long runMemory = response.getRunMemory();
+        
         
         // 根据沙箱的执行结果，设置题目的判题状态和信息
         ProblemSubmitVO problemSubmitVO = new ProblemSubmitVO();
         BeanUtil.copyProperties(problemSubmit, problemSubmitVO);
         JudgeConfig problemJudgeConfig = JSONUtil.toBean(problem.getJudgeConfig(), JudgeConfig.class);
         JudgeConfig judgeConfig = new JudgeConfig();
-        judgeConfig.setTimeLimit(time);
-        judgeConfig.setMemoryLimit(memory);
+        judgeConfig.setTimeLimit(runTime);
+        judgeConfig.setMemoryLimit(runMemory);
         JudgeInfo judgeInfo = new JudgeInfo();
-        judgeInfo.setStatus(status);
+        judgeInfo.setStatus(statusCode);
         // 执行成功
-        if (status.equals(ExecuteCodeStatusEnum.SUCCESS.getCode())) {
+        if (statusCode.equals(ExecuteResponseEnum.RUN_SUCCESS.getCode())) {
             // 判题配置
-            if (answerOutputList.size() == outputList.size()) {
+            if (answerOutputList.size() == stdout.size()) {
                 for (int i = 0; i < answerOutputList.size(); i++) {
-                    if (time > problemJudgeConfig.getTimeLimit()) {
+                    if (runTime > problemJudgeConfig.getTimeLimit()) {
                         judgeInfo.setMessage(JudgeInfoEnum.TIME_LIMIT_EXCEEDED.getText());
                         judgeInfo.setJudgeConfig(judgeConfig);
                         problemSubmitVO.setJudgeInfo(judgeInfo);
                         return problemSubmitVO;
                     }
-                    if (!answerOutputList.get(i).equals(outputList.get(i))) {
+                    if (!answerOutputList.get(i).equals(stdout.get(i))) {
                         // 遇到了一个没通过的
                         problemSubmit.setStatus(ProblemSubmitStatusEnum.FAILED.getCode());
                         problemSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
@@ -147,18 +153,18 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
                     }
                 }
             }
-        } else if (status.equals(ExecuteCodeStatusEnum.RUN_FAILED.getCode())) {
-            judgeInfo.setMessage(errorMessage);
-        } else if (status.equals(ExecuteCodeStatusEnum.COMPILE_FAILED.getCode())) {
-            judgeInfo.setMessage(errorMessage);
+        } else if (statusCode.equals(ExecuteResponseEnum.RUNTIME_ERROR.getCode())) {
+            judgeInfo.setMessage(stderr);
+        } else if (statusCode.equals(ExecuteResponseEnum.COMPILE_ERROR.getCode())) {
+            judgeInfo.setMessage(stderr);
         }
         
         // 5、修改数据库中的判题结果
-        boolean isSuccess = ExecuteCodeStatusEnum.SUCCESS.getCode().equals(status);
+        boolean isSuccess = ExecuteResponseEnum.RUN_SUCCESS.getCode().equals(statusCode);
         problemSubmit.setStatus(isSuccess ?
                 ProblemSubmitStatusEnum.SUCCEED.getCode() :
                 ProblemSubmitStatusEnum.FAILED.getCode());
-        judgeInfo.setMessage(message);
+        judgeInfo.setMessage(msg);
         judgeInfo.setJudgeConfig(judgeConfig);
         problemSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
         flag = this.updateById(problemSubmit);

@@ -3,23 +3,17 @@ package com.mredust.oj.codesandbox.model.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.stream.Stream;
-
 /**
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
 @Getter
 @AllArgsConstructor
 public enum LanguageEnum {
-    JAVA("java", "java"),
+    JAVA("Java", "java"),
     
-    PYTHON("python", "python");
+    PYTHON("Python3", "python3");
     
     private final String language;
     
     private final String value;
-    
-    public static LanguageEnum getLanguageEnum(String language) {
-        return Stream.of(LanguageEnum.values()).filter(languageEnum -> languageEnum.getLanguage().equals(language)).findFirst().orElse(null);
-    }
 }

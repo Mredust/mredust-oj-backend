@@ -1,8 +1,8 @@
 package com.mredust.oj.codesandbox.service;
 
 
-import com.mredust.oj.codesandbox.model.dto.ExecuteCodeRequest;
-import com.mredust.oj.codesandbox.model.dto.ExecuteCodeResponse;
+import com.mredust.oj.codesandbox.model.dto.ExecuteRequest;
+import com.mredust.oj.codesandbox.model.dto.ExecuteResponse;
 
 /**
  * 执行代码接口
@@ -10,5 +10,5 @@ import com.mredust.oj.codesandbox.model.dto.ExecuteCodeResponse;
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
 public interface CodeSandboxService {
-    ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest);
+    ExecuteResponse executeCode(ExecuteRequest executeCodeRequest);
 }

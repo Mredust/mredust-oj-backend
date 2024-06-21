@@ -9,18 +9,19 @@ import java.util.List;
 
 /**
  * 代码执行请求
+ *
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExecuteCodeRequest {
+public class ExecuteRequest {
     
     /**
-     * 输入列表
+     * 测试用例
      */
-    private List<String> inputList;
+    private List<String[]> testCaseList;
     
     /**
      * 输入代码

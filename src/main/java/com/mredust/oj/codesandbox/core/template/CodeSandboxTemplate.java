@@ -1,118 +1,61 @@
 package com.mredust.oj.codesandbox.core.template;
 
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.dfa.FoundWord;
-import cn.hutool.dfa.WordTree;
-import com.mredust.oj.codesandbox.model.dto.ExecuteCodeResponse;
-import com.mredust.oj.codesandbox.model.dto.ExecuteResult;
-import com.mredust.oj.codesandbox.model.enums.ExecuteCodeStatusEnum;
-import com.mredust.oj.codesandbox.utils.ProcessUtils;
-import com.mredust.oj.common.ResponseCode;
-import com.mredust.oj.exception.BusinessException;
-import org.apache.commons.lang3.StringUtils;
+import com.mredust.oj.codesandbox.model.dto.ExecuteResponse;
+import com.mredust.oj.codesandbox.model.enums.ExecuteResponseEnum;
+import com.mredust.oj.exception.CompilationException;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import static com.mredust.oj.codesandbox.constant.CodeSandboxConstant.*;
+
+
 /**
- * 代码沙箱模板方法
+ * 代码沙箱模板
  *
  * @author <a href="https://github.com/Mredust">Mredust</a>
  */
 public abstract class CodeSandboxTemplate {
-    private static final String GLOBAL_CODE_DIR_PATH = "tempcode";
     
-    private static final WordTree WORD_TREE;
-    
-    private static final String EXIT_CMD = "exit";
-    
-    static {
-        WORD_TREE = new WordTree();
-        WORD_TREE.addWords("Files", "exec");
-    }
-    
-    public ExecuteCodeResponse executeCode(List<String> inputList, String code) {
-        FoundWord foundWord = WORD_TREE.matchWord(code);
-        if (foundWord != null) {
-            throw new BusinessException(ResponseCode.DANGER_CODE);
-        }
-        String path = String.format("%s%s%s", System.getProperty("user.dir"), File.separator, GLOBAL_CODE_DIR_PATH);
-        File file = saveCodeToFile(path, code);
+    public ExecuteResponse executeCode(String code, List<String[]> testCaseList) {
+        String parentPath = String.format("%s%s%s", System.getProperty("user.dir"), File.separator, WORK_DIR);
+        File file;
+        List<String> runMessageList;
+        Long[] time = {0L};
+        Long[] memory = {0L};
         try {
-            ExecuteResult executeResult = compileCode(file);
-            Integer executeCode = executeResult.getExecuteCode();
-            if (ExecuteCodeStatusEnum.COMPILE_FAILED.getCode().equals(executeCode)) {
-                return getErrorResponse(ExecuteCodeStatusEnum.COMPILE_FAILED);
-            }
-        } catch (IOException e) {
-            return getErrorResponse(ExecuteCodeStatusEnum.COMPILE_FAILED);
+            file = preprocessFile(parentPath, code);
+            String templateCode = generateTemplateCode(file);
+            clearFile(file);
+            String executeCode = mergeCode(templateCode, code);
+            file = saveFile(executeCode, parentPath, MAIN_CLASS_NAME);
+            runMessageList = runCode(file, testCaseList, time, memory);
+        } catch (CompilationException e) {
+            return getExecuteResponse(ExecuteResponseEnum.COMPILE_ERROR, e.getMessage());
         }
-        List<ExecuteResult> executeResultList;
-        try {
-            executeResultList = runCompileFile(EXIT_CMD, file, file.getAbsolutePath(), inputList);
-        } catch (IOException e) {
-            return getErrorResponse(ExecuteCodeStatusEnum.RUN_FAILED);
+        String errorMessage = getErrorMessage(runMessageList);
+        if (!errorMessage.isEmpty()) {
+            clearFile(file);
+            return getExecuteResponse(ExecuteResponseEnum.RUNTIME_ERROR, errorMessage);
         }
-        ExecuteCodeResponse executeCodeResponse = getExecuteCodeResponse(executeResultList);
         clearFile(file);
-        return executeCodeResponse;
+        return getExecuteResponse(ExecuteResponseEnum.RUN_SUCCESS, false, errorMessage, time, memory, runMessageList);
     }
     
-    protected abstract File saveCodeToFile(String path, String code);
+    protected abstract File preprocessFile(String parentPath, String code);
     
-    protected abstract ExecuteResult compileCode(File file) throws IOException;
+    protected abstract String generateTemplateCode(File file);
     
-    protected List<ExecuteResult> runCompileFile(String cmd, File file, String path, List<String> inputList) throws IOException {
-        ArrayList<ExecuteResult> executeResultList = new ArrayList<>();
-        if (inputList.isEmpty()) {
-            executeResultList.add(runProcess(cmd, path, StringUtils.EMPTY));
-        } else {
-            for (String inputArgs : inputList) {
-                executeResultList.add(runProcess(cmd, path, inputArgs));
-            }
-        }
-        return executeResultList;
-    }
+    protected abstract String mergeCode(String templateCode, String code);
     
-    private ExecuteResult runProcess(String cmd, String path, String inputArgs) throws IOException {
-        String runCmd = String.format(cmd, path, inputArgs);
-        Process runProcess = Runtime.getRuntime().exec(runCmd);
-        return ProcessUtils.processHandler(runProcess);
-    }
+    protected abstract File saveFile(String code, String parentPath, String fileName);
     
-    protected ExecuteCodeResponse getExecuteCodeResponse(List<ExecuteResult> executeResultList) {
-        ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
-        ArrayList<String> outputList = new ArrayList<>();
-        long totalTime = 0L;
-        long totalMemory = 0L;
-        boolean compileFailed = false;
-        for (ExecuteResult executeResult : executeResultList) {
-            String message = executeResult.getMessage();
-            if (ExecuteCodeStatusEnum.COMPILE_FAILED.getCode().equals(executeResult.getExecuteCode())) {
-                executeCodeResponse.setStatus(ExecuteCodeStatusEnum.COMPILE_FAILED.getCode());
-                executeCodeResponse.setMessage(ExecuteCodeStatusEnum.COMPILE_FAILED.getMsg());
-                executeCodeResponse.setErrorMessage(message);
-                outputList.clear();
-                compileFailed = true;
-                break;
-            }
-            outputList.add(executeResult.getMessage());
-            Long runTime = executeResult.getTime();
-            Long runMemory = executeResult.getMemory();
-            totalTime += (runTime != null) ? runTime : 0L;
-            totalMemory += (runMemory != null) ? runMemory : 0L;
-        }
-        if (!compileFailed) {
-            executeCodeResponse.setStatus(ExecuteCodeStatusEnum.SUCCESS.getCode());
-            executeCodeResponse.setMessage(ExecuteCodeStatusEnum.SUCCESS.getMsg());
-        }
-        executeCodeResponse.setTime(totalTime);
-        executeCodeResponse.setMemory(totalMemory);
-        executeCodeResponse.setOutputList(outputList);
-        return executeCodeResponse;
-    }
+    protected abstract List<String> runCode(File file, List<String[]> testCaseList, Long[] time, Long[] memory);
+    
+    
+    protected abstract String getErrorMessage(List<String> runMessageList);
     
     
     protected void clearFile(File file) {
@@ -122,14 +65,26 @@ public abstract class CodeSandboxTemplate {
         }
     }
     
-    private ExecuteCodeResponse getErrorResponse(ExecuteCodeStatusEnum executeCodeStatusEnum) {
-        return ExecuteCodeResponse.builder()
-                .status(executeCodeStatusEnum.getCode())
-                .message(executeCodeStatusEnum.getMsg())
-                .outputList(new ArrayList<>())
-                .time(0L)
-                .memory(0L)
-                .build();
+    private ExecuteResponse getExecuteResponse(ExecuteResponseEnum executeResponseEnum, String msg) {
+        return getExecuteResponse(executeResponseEnum, true, msg, INIT_VALUE, INIT_VALUE, Collections.emptyList());
+    }
+    
+    @SafeVarargs
+    private final ExecuteResponse getExecuteResponse(ExecuteResponseEnum executeResponseEnum, boolean isCompileAndRun, String msg, Long[] time, Long[] memory, List<String>... dataList) {
+        ExecuteResponse executeResponse = new ExecuteResponse();
+        executeResponse.setCode(executeResponseEnum.getCode());
+        executeResponse.setMsg(executeResponseEnum.getMsg());
+        if (isCompileAndRun) {
+            executeResponse.setStderr(msg);
+            executeResponse.setRunTime(0L);
+            executeResponse.setRunMemory(0L);
+        } else {
+            executeResponse.setStdout(dataList[0]);
+            executeResponse.setRunTime(time[0]);
+            memory[0] = memory[0] / (1024 * 1024);
+            executeResponse.setRunMemory(memory[0]);
+        }
+        return executeResponse;
     }
     
     

@@ -1,12 +1,13 @@
 package com.mredust.oj.codesandbox.utils;
 
-import com.mredust.oj.codesandbox.model.dto.ExecuteResult;
+import com.mredust.oj.exception.CompilationException;
 import org.springframework.util.StopWatch;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -18,32 +19,42 @@ public class ProcessUtils {
     private ProcessUtils() {
     }
     
-    public static ExecuteResult processHandler(Process compileProcess) {
-        ExecuteResult executeResult = new ExecuteResult();
+    public static String processHandler(String cmd, Long[] time, Long[] memory) {
+        Process process = null;
         try {
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-            int execResult = compileProcess.waitFor();
-            executeResult.setExecuteCode(execResult);
-            if (execResult == 0) {
-                executeResult.setMessage(getStreamMessage(compileProcess.getInputStream()));
-            } else {
-                executeResult.setMessage(getStreamMessage(compileProcess.getErrorStream()));
+            Runtime runtime = Runtime.getRuntime();
+            runtime.gc();
+            StopWatch watch = new StopWatch();
+            watch.start();
+            long startMemory = getUsedMemory(runtime);
+            process = runtime.exec(cmd);
+            boolean flag = process.waitFor(4L, TimeUnit.SECONDS);
+            if (!flag) {
+                process.destroyForcibly();
+                throw new CompilationException("运行超时");
             }
-            stopWatch.stop();
-            executeResult.setTime(stopWatch.getLastTaskTimeMillis());
-        } catch (InterruptedException | IOException e) {
+            int execResult = process.exitValue();
+            InputStream stream = (execResult == 0) ? process.getInputStream() : process.getErrorStream();
+            String message = getStreamMessage(stream);
+            long endMemory = getUsedMemory(runtime);
+            watch.stop();
+            long runTime = watch.getLastTaskTimeMillis();
+            time[0] += runTime;
+            memory[0] += (endMemory - startMemory);
+            return message;
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
-            compileProcess.destroy();
+            if (process != null) {
+                closeProcessStreams(process);
+                process.destroy();
+            }
         }
-        return executeResult;
     }
-    
     
     public static String getStreamMessage(InputStream inputStream) throws IOException {
         StringBuilder outputList = new StringBuilder();
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "GBK"))) {
             String outputLine;
             while ((outputLine = bufferedReader.readLine()) != null) {
                 outputList.append(outputLine);
@@ -51,4 +62,20 @@ public class ProcessUtils {
         }
         return outputList.toString();
     }
+    
+    private static void closeProcessStreams(Process process) {
+        try {
+            process.getInputStream().close();
+            process.getOutputStream().close();
+            process.getErrorStream().close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    
+    private static long getUsedMemory(Runtime runtime) {
+        return runtime.totalMemory() - runtime.freeMemory();
+    }
+    
 }
