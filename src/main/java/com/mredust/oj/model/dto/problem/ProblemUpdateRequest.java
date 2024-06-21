@@ -3,7 +3,6 @@ package com.mredust.oj.model.dto.problem;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -19,6 +18,7 @@ import java.util.List;
 @NotNull
 public class ProblemUpdateRequest implements Serializable {
     
+    private static final long serialVersionUID = 1L;
     /**
      * id
      */
@@ -38,34 +38,50 @@ public class ProblemUpdateRequest implements Serializable {
     @Length(message = "内容过长", max = 5000)
     private String content;
     
+    
     /**
-     * 难度
+     * 题目模板代码
      */
-    @NotNull
+    private String templateCode;
+    
+    /**
+     * 难度(0-简单 1-中等 2-困难)
+     */
     private Integer difficulty;
     
     /**
-     * 标签列表
+     * 标签列表（json 数组）
      */
-    @NotNull
-    private List<String> tags;
+    private String tags;
     
     /**
-     * 题目答案
+     * 判题用例（List<String[]>）
      */
-    private String answer;
+    private List<String[]> testCase;
     
     /**
-     * 判题用例
+     * 判题用例答案（List<String[]>）
      */
-    @NotNull
-    private List<JudgeCase> judgeCase;
+    private List<String> testAnswer;
     
     /**
-     * 判题配置
+     * 运行时间限制（ms）
      */
-    @NotNull
-    private JudgeConfig judgeConfig;
+    private Integer runTime;
     
-    private static final long serialVersionUID = 1L;
+    /**
+     * 内存限制（KB）
+     */
+    private Integer runMemory;
+    
+    /**
+     * 栈大小（KB）
+     */
+    private Integer runStack;
+    
+    
+    /**
+     * 创建用户 id
+     */
+    private Long userId;
 }

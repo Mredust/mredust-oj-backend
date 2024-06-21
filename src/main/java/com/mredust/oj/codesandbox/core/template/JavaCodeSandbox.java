@@ -70,7 +70,7 @@ public class JavaCodeSandbox extends CodeSandboxTemplate {
             }
         }
         if (returnType.contains("[]")) {
-            templateCode.append(")));\n").append("\t}\n");
+            templateCode.append(")).replaceAll(\"[\\\\[\\\\]]\", \"\"));\n").append("\t}\n");
         } else {
             templateCode.append("));\n").append("\t}\n");
         }
@@ -101,7 +101,7 @@ public class JavaCodeSandbox extends CodeSandboxTemplate {
         int size = testCaseList.size();
         int totalCombinations = 1;
         for (String[] testCase : testCaseList) {
-            totalCombinations = Math.min(testCase.length, totalCombinations);
+            totalCombinations = Math.max(testCase.length, totalCombinations);
         }
         for (int i = 0; i < totalCombinations; i++) {
             List<String> params = new ArrayList<>();

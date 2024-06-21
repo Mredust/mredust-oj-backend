@@ -13,15 +13,12 @@ import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.mapper.ProblemMapper;
 import com.mredust.oj.mapper.ProblemSubmitMapper;
-import com.mredust.oj.model.dto.problem.JudgeCase;
-import com.mredust.oj.model.dto.problem.JudgeConfig;
 import com.mredust.oj.model.dto.problemsubmit.ProblemSubmitAddRequest;
 import com.mredust.oj.model.entity.Problem;
 import com.mredust.oj.model.entity.ProblemSubmit;
 import com.mredust.oj.model.entity.User;
 import com.mredust.oj.model.enums.problem.JudgeInfoEnum;
 import com.mredust.oj.model.enums.problem.ProblemSubmitStatusEnum;
-import com.mredust.oj.model.vo.JudgeInfo;
 import com.mredust.oj.model.vo.ProblemSubmitVO;
 import com.mredust.oj.service.ProblemSubmitService;
 import org.springframework.beans.BeanUtils;
@@ -29,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**
@@ -82,9 +78,10 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         problemSubmit.setUserId(userId);
         // 设置初始状态
         problemSubmit.setStatus(ProblemSubmitStatusEnum.WAITING.getCode());
-        boolean save = this.save(problemSubmit);
-        if (!save) {
-            throw new BusinessException(ResponseCode.SYSTEM_ERROR, "数据插入失败");
+        problemSubmit.setMessage(ProblemSubmitStatusEnum.WAITING.getStatus());
+        boolean flag = this.save(problemSubmit);
+        if (!flag) {
+            throw new BusinessException(ResponseCode.SYSTEM_ERROR, "题目状态插入失败");
         }
         // 执行判题服务
         return handleJudge(problemSubmit, problem);
@@ -92,26 +89,20 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
     
     private ProblemSubmitVO handleJudge(ProblemSubmit problemSubmit, Problem problem) {
         problemSubmit.setStatus(ProblemSubmitStatusEnum.RUNNING.getCode());
-        boolean flag = this.updateById(problemSubmit);
-        if (!flag) {
-            throw new BusinessException(ResponseCode.SYSTEM_ERROR, "题目状态更新失败");
-        }
+        problemSubmit.setMessage(ProblemSubmitStatusEnum.RUNNING.getStatus());
+        updateStatus(problemSubmit);
         // 调用沙箱，获取到执行结果
         String language = problemSubmit.getLanguage();
         String code = problemSubmit.getCode();
         // 获取输入用例
-        List<JudgeCase> judgeCaseList = JSONUtil.toList(problem.getJudgeCase(), JudgeCase.class);
-        // List<String> inputList = judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
-        List<String[]> inputList = judgeCaseList.stream()
-                .map(JudgeCase::getInput)
-                .map(input -> input.split(","))  // 根据具体分隔符进行拆分
-                .collect(Collectors.toList());
-        
-        List<String> answerOutputList = judgeCaseList.stream().map(JudgeCase::getOutput).collect(Collectors.toList());
+        String testCase = problem.getTestCase();
+        String testCaseAnswer = problem.getTestAnswer();
+        List<String[]> testCaseList = JSONUtil.toList(testCase, String[].class);
+        List<String> testCaseAnswerList = JSONUtil.toList(testCaseAnswer, String.class);
         ExecuteRequest executeCodeRequest = ExecuteRequest.builder()
                 .code(code)
                 .language(language)
-                .testCaseList(inputList)
+                .testCaseList(testCaseList)
                 .build();
         ExecuteResponse response = codeSandboxService.executeCode(executeCodeRequest);
         Integer statusCode = response.getCode();
@@ -121,64 +112,47 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         Long runTime = response.getRunTime();
         Long runMemory = response.getRunMemory();
         
-        
         // 根据沙箱的执行结果，设置题目的判题状态和信息
         ProblemSubmitVO problemSubmitVO = new ProblemSubmitVO();
-        BeanUtil.copyProperties(problemSubmit, problemSubmitVO);
-        JudgeConfig problemJudgeConfig = JSONUtil.toBean(problem.getJudgeConfig(), JudgeConfig.class);
-        JudgeConfig judgeConfig = new JudgeConfig();
-        judgeConfig.setTimeLimit(runTime);
-        judgeConfig.setMemoryLimit(runMemory);
-        JudgeInfo judgeInfo = new JudgeInfo();
-        judgeInfo.setStatus(statusCode);
-        // 执行成功
-        if (statusCode.equals(ExecuteResponseEnum.RUN_SUCCESS.getCode())) {
-            // 判题配置
-            if (answerOutputList.size() == stdout.size()) {
-                for (int i = 0; i < answerOutputList.size(); i++) {
-                    if (runTime > problemJudgeConfig.getTimeLimit()) {
-                        judgeInfo.setMessage(JudgeInfoEnum.TIME_LIMIT_EXCEEDED.getText());
-                        judgeInfo.setJudgeConfig(judgeConfig);
-                        problemSubmitVO.setJudgeInfo(judgeInfo);
-                        return problemSubmitVO;
-                    }
-                    if (!answerOutputList.get(i).equals(stdout.get(i))) {
-                        // 遇到了一个没通过的
-                        problemSubmit.setStatus(ProblemSubmitStatusEnum.FAILED.getCode());
-                        problemSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
-                        judgeInfo.setMessage(ProblemSubmitStatusEnum.FAILED.getStatus());
-                        problemSubmitVO.setJudgeInfo(judgeInfo);
-                        updateById(problemSubmit);
-                        return problemSubmitVO;
+        Long problemRunTime = problem.getRunTime();
+        Long problemRunMemory = problem.getRunMemory();
+        problemSubmitVO.setRunTime(0L);
+        problemSubmitVO.setRunMemory(0L);
+        problemSubmitVO.setRunStack(0L);
+        if (runTime > problemRunTime) {
+            handleSubmissionStatus(problemSubmit, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.TIME_LIMIT_EXCEEDED.getText());
+        } else if (runMemory > problemRunMemory) {
+            handleSubmissionStatus(problemSubmit, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.MEMORY_LIMIT_EXCEEDED.getText());
+        } else {
+            if (statusCode.equals(ExecuteResponseEnum.RUN_SUCCESS.getCode())) {
+                boolean allTestCasesPassed = true;
+                if (testCaseAnswerList.size() != stdout.size()) {
+                    allTestCasesPassed = false;
+                } else {
+                    for (int i = 0; i < testCaseAnswerList.size(); i++) {
+                        String s1 = testCaseAnswerList.get(i);
+                        String s2 = stdout.get(i);
+                        if (!s1.equals(s2)) {
+                            allTestCasesPassed = false;
+                            break;
+                        }
                     }
                 }
+                if (allTestCasesPassed) {
+                    problemSubmit.setStatus(ProblemSubmitStatusEnum.SUCCEED.getCode());
+                    problemSubmit.setMessage(msg);
+                    problemSubmit.setRunTime(runTime);
+                    problemSubmit.setRunMemory(runMemory);
+                    updateStatus(problemSubmit);
+                    problemMapper.update(null, new UpdateWrapper<Problem>().setSql("accepted_num = accepted_num + 1").eq("id", problem.getId()));
+                } else {
+                    handleSubmissionStatus(problemSubmit, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.WRONG_ANSWER.getText());
+                }
+            } else {
+                handleSubmissionStatus(problemSubmit, ProblemSubmitStatusEnum.FAILED, msg, stderr);
             }
-        } else if (statusCode.equals(ExecuteResponseEnum.RUNTIME_ERROR.getCode())) {
-            judgeInfo.setMessage(stderr);
-        } else if (statusCode.equals(ExecuteResponseEnum.COMPILE_ERROR.getCode())) {
-            judgeInfo.setMessage(stderr);
         }
-        
-        // 5、修改数据库中的判题结果
-        boolean isSuccess = ExecuteResponseEnum.RUN_SUCCESS.getCode().equals(statusCode);
-        problemSubmit.setStatus(isSuccess ?
-                ProblemSubmitStatusEnum.SUCCEED.getCode() :
-                ProblemSubmitStatusEnum.FAILED.getCode());
-        judgeInfo.setMessage(msg);
-        judgeInfo.setJudgeConfig(judgeConfig);
-        problemSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
-        flag = this.updateById(problemSubmit);
-        if (!flag) {
-            throw new BusinessException(ResponseCode.SYSTEM_ERROR, "题目状态更新失败");
-        }
-        // 6、修改题目的通过数
-        if (isSuccess) {
-            problemMapper.update(null, new UpdateWrapper<Problem>().setSql("accepted_num = accepted_num + 1").eq("id", problem.getId()));
-        }
-        problemSubmitVO.setStatus(isSuccess ?
-                ProblemSubmitStatusEnum.SUCCEED.getCode() :
-                ProblemSubmitStatusEnum.FAILED.getCode());
-        problemSubmitVO.setJudgeInfo(judgeInfo);
+        BeanUtil.copyProperties(problemSubmit, problemSubmitVO);
         return problemSubmitVO;
     }
     
@@ -192,8 +166,22 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         }
         ProblemSubmitVO problemSubmitVO = new ProblemSubmitVO();
         BeanUtils.copyProperties(problemSubmit, problemSubmitVO);
-        problemSubmitVO.setJudgeInfo(JSONUtil.toBean(problemSubmit.getJudgeInfo(), JudgeInfo.class));
         return problemSubmitVO;
+    }
+    
+    
+    private void handleSubmissionStatus(ProblemSubmit problemSubmit, ProblemSubmitStatusEnum status, String message, String... errorMessage) {
+        problemSubmit.setStatus(status.getCode());
+        problemSubmit.setMessage(message);
+        problemSubmit.setErrorMessage(errorMessage[0]);
+        updateStatus(problemSubmit);
+    }
+    
+    private void updateStatus(ProblemSubmit problemSubmit) {
+        boolean flag = this.updateById(problemSubmit);
+        if (!flag) {
+            throw new BusinessException(ResponseCode.SYSTEM_ERROR, "题目状态更新失败");
+        }
     }
 }
 

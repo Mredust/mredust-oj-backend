@@ -8,8 +8,12 @@
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="language" column="language" jdbcType="VARCHAR"/>
             <result property="code" column="code" jdbcType="VARCHAR"/>
-            <result property="judgeInfo" column="judge_info" jdbcType="VARCHAR"/>
             <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="message" column="message" jdbcType="VARCHAR"/>
+            <result property="errorMessage" column="error_message" jdbcType="VARCHAR"/>
+            <result property="runTime" column="run_time" jdbcType="INTEGER"/>
+            <result property="runMemory" column="run_memory" jdbcType="INTEGER"/>
+            <result property="runStack" column="run_stack" jdbcType="INTEGER"/>
             <result property="problemId" column="problem_id" jdbcType="BIGINT"/>
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
@@ -19,8 +23,9 @@
 
     <sql id="Base_Column_List">
         id,language,code,
-        judge_info,status,problem_id,
-        user_id,create_time,update_time,
-        is_delete
+        status,message,error_message,
+        run_time,run_memory,run_stack,
+        problem_id,user_id,create_time,
+        update_time,is_delete
     </sql>
 </mapper>

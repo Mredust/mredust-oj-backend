@@ -7,14 +7,17 @@
     <resultMap id="BaseResultMap" type="com.mredust.oj.model.entity.Problem">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="title" column="title" jdbcType="VARCHAR"/>
-            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="templateCode" column="template_code" jdbcType="VARCHAR"/>
             <result property="difficulty" column="difficulty" jdbcType="TINYINT"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
             <result property="tags" column="tags" jdbcType="VARCHAR"/>
-            <result property="answer" column="answer" jdbcType="VARCHAR"/>
             <result property="submitNum" column="submit_num" jdbcType="INTEGER"/>
             <result property="acceptedNum" column="accepted_num" jdbcType="INTEGER"/>
-            <result property="judgeCase" column="judge_case" jdbcType="VARCHAR"/>
-            <result property="judgeConfig" column="judge_config" jdbcType="VARCHAR"/>
+            <result property="testCase" column="test_case" jdbcType="VARCHAR"/>
+            <result property="testAnswer" column="test_answer" jdbcType="VARCHAR"/>
+            <result property="runTime" column="run_time" jdbcType="INTEGER"/>
+            <result property="runMemory" column="run_memory" jdbcType="INTEGER"/>
+            <result property="runStack" column="run_stack" jdbcType="INTEGER"/>
             <result property="thumbNum" column="thumb_num" jdbcType="INTEGER"/>
             <result property="favourNum" column="favour_num" jdbcType="INTEGER"/>
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
@@ -24,10 +27,11 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,title,content,
-        difficulty,tags,answer,
-        submit_num,accepted_num,judge_case,
-        judge_config,thumb_num,favour_num,
+        id,title,template_code,
+        difficulty,content,tags,
+        submit_num,accepted_num,test_case,
+        test_answer,run_time,run_memory,
+        run_stack,thumb_num,favour_num,
         user_id,create_time,update_time,
         is_delete
     </sql>

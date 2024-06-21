@@ -1,9 +1,10 @@
 package com.mredust.oj.model.dto.problem;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -17,6 +18,8 @@ import java.util.List;
 @Data
 @NotNull
 public class ProblemAddRequest implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
     /**
      * 标题
      */
@@ -32,33 +35,50 @@ public class ProblemAddRequest implements Serializable {
     private String content;
     
     /**
-     * 难度
+     * id
      */
-    @NotBlank
-    private String difficulty;
+    @TableId(type = IdType.AUTO)
+    private Long id;
     
     /**
-     * 标签列表
+     * 题目模板代码
      */
-    @NotNull
+    private String templateCode;
+    
+    /**
+     * 难度(0-简单 1-中等 2-困难)
+     */
+    private Integer difficulty;
+    
+    /**
+     * 标签列表（json 数组）
+     */
     private List<String> tags;
     
     /**
-     * 题目答案
+     * 判题用例（List<String[]>）
      */
-    private String answer;
+    private List<String[]> testCase;
     
     /**
-     * 判题用例
+     * 判题用例答案（List<String[]>）
      */
-    @NotNull
-    private List<JudgeCase> judgeCase;
+    private List<String> testAnswer;
     
     /**
-     * 判题配置
+     * 运行时间限制（ms）
      */
-    @NotNull
-    private JudgeConfig judgeConfig;
+    private Integer runTime;
     
-    private static final long serialVersionUID = 1L;
+    /**
+     * 内存限制（KB）
+     */
+    private Integer runMemory;
+    
+    /**
+     * 栈大小（KB）
+     */
+    private Integer runStack;
+    
+    
 }

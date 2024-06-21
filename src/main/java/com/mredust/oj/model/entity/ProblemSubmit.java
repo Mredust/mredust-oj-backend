@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 题目提交表
- * @author Mredust
  * @TableName problem_submit
  */
 @TableName(value ="problem_submit")
@@ -33,14 +33,34 @@ public class ProblemSubmit implements Serializable {
     private String code;
 
     /**
-     * 判题信息（json 对象）
-     */
-    private String judgeInfo;
-
-    /**
      * 判题状态（0-待判题 1-判题中 2-成功 3-失败）
      */
     private Integer status;
+
+    /**
+     * 判题信息
+     */
+    private String message;
+
+    /**
+     * 判题错误信息
+     */
+    private String errorMessage;
+
+    /**
+     * 运行时间（ms）
+     */
+    private Long runTime;
+
+    /**
+     * 内存限制（KB）
+     */
+    private Long runMemory;
+
+    /**
+     * 栈大小（KB）
+     */
+    private Long runStack;
 
     /**
      * 题目id

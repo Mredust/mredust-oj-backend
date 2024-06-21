@@ -19,24 +19,21 @@ create table if not exists `user`
 ) comment ='用户表';
 
 
-insert into `user` (`account`, `password`, `username`, `avatar_url`, `sex`, `status`, `role`)
-values ('admin', 'acbd988c6cc18576a364047bd2fdcf70', '管理员',
-        'https://raw.githubusercontent.com/Mredust/images/main/avatar/工作羊.jpg', 2, 0, 0);
-
-
--- 题库表
 create table if not exists problem
 (
     id            bigint        not null auto_increment comment 'id' primary key,
     title         varchar(512)  not null comment '标题',
-    content       text          not null comment '内容',
+    template_code text          not null comment '题目模板代码',
     difficulty    tinyint       not null default 0 comment '难度(0-简单 1-中等 2-困难)',
+    content       text          not null comment '内容',
     tags          varchar(1024) null comment '标签列表（json 数组）',
-    answer        text          null comment '题目答案',
     submit_num    int           not null default 0 comment '题目提交数',
     accepted_num  int           not null default 0 comment '题目通过数',
-    judge_case    text          null comment '判题用例（json 数组）',
-    judge_config  text          null comment '判题配置（json 对象）',
+    test_case     text          null comment '判题用例（List<String[]>）',
+    test_answer   text          null comment '判题用例答案',
+    run_time      int           not null default 1000 comment '运行时间限制（ms）',
+    run_memory    int           not null default 1024 comment '内存限制（KB）',
+    run_stack     int           not null default 1024 comment '栈大小（KB）',
     thumb_num     int           not null default 0 comment '点赞数',
     favour_num    int           not null default 0 comment '收藏数',
     user_id       bigint        not null comment '创建用户 id',
@@ -47,14 +44,24 @@ create table if not exists problem
 ) comment '题库表';
 
 
+-- 题库表
+insert into `user` (`account`, `password`, `username`, `avatar_url`, `sex`, `status`, `role`)
+values ('admin', 'acbd988c6cc18576a364047bd2fdcf70', '管理员',
+        'https://raw.githubusercontent.com/Mredust/images/main/avatar/工作羊.jpg', 2, 0, 0);
+
+
 -- 题目提交表
 create table if not exists problem_submit
 (
     id            bigint       not null auto_increment comment 'id' primary key,
     language      varchar(128) not null comment '编程语言',
     code          text         not null comment '用户代码',
-    judge_info    text         null comment '判题信息（json 对象）',
     status        tinyint      not null default 0 comment '判题状态（0-待判题 1-判题中 2-成功 3-失败）',
+    message       text         null comment '判题信息',
+    error_message text         null comment '判题错误信息',
+    run_time      int          not null default 1000 comment '运行时间（ms）',
+    run_memory    int          not null default 1024 comment '内存限制（KB）',
+    run_stack     int          not null default 1024 comment '栈大小（KB）',
     problem_id    bigint       not null comment '题目id',
     user_id       bigint       not null comment '创建用户id',
     `create_time` datetime     not null default CURRENT_TIMESTAMP comment '创建时间',

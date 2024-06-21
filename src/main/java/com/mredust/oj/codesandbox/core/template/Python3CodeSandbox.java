@@ -64,14 +64,14 @@ public class Python3CodeSandbox extends CodeSandboxTemplate {
                 .append("\t\traise ValueError(f\"不支持该类型的参数: {arg_type}\")\n\n");
         templateCode.append("if __name__ == '__main__':\n")
                 .append("\timport sys\n");
-        templateCode.append("\tprint(Solution().").append(name).append("(");
+        templateCode.append("\tprint(str(Solution().").append(name).append("(");
         for (int i = 0; i < args.length; i++) {
             templateCode.append("type_conversion(sys.argv[").append(i + 1).append("], '").append(args[i].trim()).append("')");
             if (i < args.length - 1) {
                 templateCode.append(", ");
             }
         }
-        templateCode.append("))\n");
+        templateCode.append(")).strip('[]'))\n");
         return templateCode.toString();
     }
     
@@ -92,7 +92,7 @@ public class Python3CodeSandbox extends CodeSandboxTemplate {
         int size = testCaseList.size();
         int totalCombinations = 1;
         for (String[] testCase : testCaseList) {
-            totalCombinations = Math.min(testCase.length, totalCombinations);
+            totalCombinations = Math.max(testCase.length, totalCombinations);
         }
         for (int i = 0; i < totalCombinations; i++) {
             List<String> params = new ArrayList<>();

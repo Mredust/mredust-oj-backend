@@ -1,6 +1,5 @@
 package com.mredust.oj.service.impl;
 
-import cn.hutool.core.stream.CollectorUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -10,7 +9,9 @@ import com.google.gson.Gson;
 import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.mapper.ProblemMapper;
-import com.mredust.oj.model.dto.problem.*;
+import com.mredust.oj.model.dto.problem.ProblemAddRequest;
+import com.mredust.oj.model.dto.problem.ProblemQueryRequest;
+import com.mredust.oj.model.dto.problem.ProblemUpdateRequest;
 import com.mredust.oj.model.entity.Problem;
 import com.mredust.oj.model.entity.ProblemSubmit;
 import com.mredust.oj.model.enums.problem.ProblemSubmitStatusEnum;
@@ -27,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 /**
  * @author Mredust
@@ -56,8 +58,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         BeanUtils.copyProperties(problemAddRequest, problem);
         problem.setUserId(userId);
         problem.setTags(GSON.toJson(problemAddRequest.getTags()));
-        problem.setJudgeCase(GSON.toJson(problemAddRequest.getJudgeCase()));
-        problem.setJudgeConfig(GSON.toJson(problemAddRequest.getJudgeConfig()));
+        problem.setTestCase(JSONUtil.toJsonStr(problemAddRequest.getTestCase()));
+        problem.setTestAnswer(JSONUtil.toJsonStr(problemAddRequest.getTestAnswer()));
         boolean result = this.save(problem);
         if (!result) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR);
@@ -75,10 +77,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     public boolean updateProblem(ProblemUpdateRequest problemUpdateRequest) {
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemUpdateRequest, problem);
-        
         problem.setTags(GSON.toJson(problemUpdateRequest.getTags()));
-        problem.setJudgeCase(GSON.toJson(problemUpdateRequest.getJudgeCase()));
-        problem.setJudgeConfig(GSON.toJson(problemUpdateRequest.getJudgeConfig()));
+        problem.setTestCase(JSONUtil.toJsonStr(problemUpdateRequest.getTestCase()));
+        problem.setTestAnswer(JSONUtil.toJsonStr(problemUpdateRequest.getTestAnswer()));
         boolean result = this.updateById(problem);
         if (!result) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR);
@@ -146,8 +147,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         ProblemVO problemVo = new ProblemVO();
         BeanUtils.copyProperties(problem, problemVo);
         problemVo.setTags(JSONUtil.toList(problem.getTags(), String.class));
-        problemVo.setJudgeConfig(JSONUtil.toBean(problem.getJudgeConfig(), JudgeConfig.class));
-        problemVo.setJudgeCase(JSONUtil.toList(problem.getJudgeCase(), JudgeCase.class));
+        problemVo.setTestCase(JSONUtil.toList(problem.getTestCase(), String[].class));
+        problemVo.setTestAnswer(JSONUtil.toList(problem.getTestAnswer(), String.class));
         
         ProblemSubmit problemSubmit = problemSubmitService.getOne(new QueryWrapper<ProblemSubmit>()
                 .select("max(status) as status").lambda()

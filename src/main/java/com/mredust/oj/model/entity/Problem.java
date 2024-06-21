@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 题库表
- * @author Mredust
  * @TableName problem
  */
 @TableName(value ="problem")
@@ -28,9 +28,9 @@ public class Problem implements Serializable {
     private String title;
 
     /**
-     * 内容
+     * 题目模板代码
      */
-    private String content;
+    private String templateCode;
 
     /**
      * 难度(0-简单 1-中等 2-困难)
@@ -38,10 +38,15 @@ public class Problem implements Serializable {
     private Integer difficulty;
 
     /**
+     * 内容
+     */
+    private String content;
+
+    /**
      * 标签列表（json 数组）
      */
     private String tags;
-    
+
     /**
      * 题目提交数
      */
@@ -53,14 +58,29 @@ public class Problem implements Serializable {
     private Integer acceptedNum;
 
     /**
-     * 判题用例（json 数组）
+     * 判题用例（List<String[]>）
      */
-    private String judgeCase;
+    private String testCase;
 
     /**
-     * 判题配置（json 对象）
+     * 判题用例答案（List<String>）
      */
-    private String judgeConfig;
+    private String testAnswer;
+
+    /**
+     * 运行时间限制（ms）
+     */
+    private Long runTime;
+
+    /**
+     * 内存限制（KB）
+     */
+    private Long runMemory;
+
+    /**
+     * 栈大小（KB）
+     */
+    private Long runStack;
 
     /**
      * 点赞数

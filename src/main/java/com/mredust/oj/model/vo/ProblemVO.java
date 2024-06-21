@@ -1,7 +1,5 @@
 package com.mredust.oj.model.vo;
 
-import com.mredust.oj.model.dto.problem.JudgeCase;
-import com.mredust.oj.model.dto.problem.JudgeConfig;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -16,6 +14,7 @@ import java.util.List;
  */
 @Data
 public class ProblemVO implements Serializable {
+    private static final long serialVersionUID = 1L;
     /**
      * id
      */
@@ -58,16 +57,6 @@ public class ProblemVO implements Serializable {
     private Integer acceptedNum;
     
     /**
-     * 测试用例（json 对象）
-     */
-    private List<JudgeCase> judgeCase;
-    
-    /**
-     * 判题配置（json 对象）
-     */
-    private JudgeConfig judgeConfig;
-    
-    /**
      * 点赞数
      */
     private Integer thumbNum;
@@ -87,11 +76,36 @@ public class ProblemVO implements Serializable {
      */
     private Date createTime;
     
+    
     /**
-     * 更新时间
+     * 题目模板代码
      */
-    private Date updateTime;
+    private String templateCode;
+    
+    /**
+     * 判题用例（List<String[]>）
+     */
+    private List<String[]> testCase;
+    
+    /**
+     * 判题用例（List<String[]>）
+     */
+    private List<String> testAnswer;
+    
+    /**
+     * 运行时间限制（ms）
+     */
+    private Integer runTime;
+    
+    /**
+     * 内存限制（KB）
+     */
+    private Integer runMemory;
+    
+    /**
+     * 栈大小（KB）
+     */
+    private Integer runStack;
     
     
-    private static final long serialVersionUID = 1L;
 }

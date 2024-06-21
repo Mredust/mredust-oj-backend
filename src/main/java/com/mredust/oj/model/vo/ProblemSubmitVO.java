@@ -11,6 +11,7 @@ import java.io.Serializable;
  */
 @Data
 public class ProblemSubmitVO implements Serializable {
+    private static final long serialVersionUID = 1L;
     /**
      * id
      */
@@ -25,11 +26,6 @@ public class ProblemSubmitVO implements Serializable {
      * 用户代码
      */
     private String code;
-    
-    /**
-     * 判题信息（json 对象）
-     */
-    private JudgeInfo judgeInfo;
     
     /**
      * 判题状态（0-待判题 1-判题中 2-成功 3-失败）
@@ -47,6 +43,30 @@ public class ProblemSubmitVO implements Serializable {
     private Long userId;
     
     
-    private static final long serialVersionUID = 1L;
+    /**
+     * 判题信息
+     */
+    private String message;
+    
+    /**
+     * 判题错误信息
+     */
+    private String errorMessage;
+    
+    /**
+     * 运行时间（ms）
+     */
+    private Long runTime;
+    
+    /**
+     * 内存限制（KB）
+     */
+    private Long runMemory;
+    
+    /**
+     * 栈大小（KB）
+     */
+    private Long runStack;
+    
     
 }
