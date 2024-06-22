@@ -12,6 +12,7 @@ import com.mredust.oj.mapper.ProblemMapper;
 import com.mredust.oj.model.dto.problem.ProblemAddRequest;
 import com.mredust.oj.model.dto.problem.ProblemQueryRequest;
 import com.mredust.oj.model.dto.problem.ProblemUpdateRequest;
+import com.mredust.oj.model.dto.problem.TemplateCode;
 import com.mredust.oj.model.entity.Problem;
 import com.mredust.oj.model.entity.ProblemSubmit;
 import com.mredust.oj.model.enums.problem.ProblemSubmitStatusEnum;
@@ -57,9 +58,10 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemAddRequest, problem);
         problem.setUserId(userId);
+        problem.setTemplateCode(GSON.toJson(problemAddRequest.getTemplateCode()));
         problem.setTags(GSON.toJson(problemAddRequest.getTags()));
-        problem.setTestCase(JSONUtil.toJsonStr(problemAddRequest.getTestCase()));
-        problem.setTestAnswer(JSONUtil.toJsonStr(problemAddRequest.getTestAnswer()));
+        problem.setTestCase(GSON.toJson(problemAddRequest.getTestCase()));
+        problem.setTestAnswer(GSON.toJson(problemAddRequest.getTestAnswer()));
         boolean result = this.save(problem);
         if (!result) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR);
@@ -77,9 +79,10 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     public boolean updateProblem(ProblemUpdateRequest problemUpdateRequest) {
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemUpdateRequest, problem);
+        problem.setTemplateCode(GSON.toJson(problemUpdateRequest.getTemplateCode()));
         problem.setTags(GSON.toJson(problemUpdateRequest.getTags()));
-        problem.setTestCase(JSONUtil.toJsonStr(problemUpdateRequest.getTestCase()));
-        problem.setTestAnswer(JSONUtil.toJsonStr(problemUpdateRequest.getTestAnswer()));
+        problem.setTestCase(GSON.toJson(problemUpdateRequest.getTestCase()));
+        problem.setTestAnswer(GSON.toJson(problemUpdateRequest.getTestAnswer()));
         boolean result = this.updateById(problem);
         if (!result) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR);
@@ -147,8 +150,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         ProblemVO problemVo = new ProblemVO();
         BeanUtils.copyProperties(problem, problemVo);
         problemVo.setTags(JSONUtil.toList(problem.getTags(), String.class));
-        problemVo.setTestCase(JSONUtil.toList(problem.getTestCase(), String[].class));
+        problemVo.setTestCase(JSONUtil.toList(problem.getTestCase(), String.class));
         problemVo.setTestAnswer(JSONUtil.toList(problem.getTestAnswer(), String.class));
+        problemVo.setTemplateCode(JSONUtil.toList(problem.getTemplateCode(), TemplateCode.class));
         
         ProblemSubmit problemSubmit = problemSubmitService.getOne(new QueryWrapper<ProblemSubmit>()
                 .select("max(status) as status").lambda()

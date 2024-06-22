@@ -95,23 +95,16 @@ public class JavaCodeSandbox extends CodeSandboxTemplate {
     }
     
     @Override
-    protected List<String> runCode(File file, List<String[]> testCaseList, Long[] time, Long[] memory) {
+    protected List<String> runCode(File file, List<String> testCaseList, Long[] time, Long[] memory) {
         processCompile(file);
         List<String> list = new ArrayList<>();
-        int size = testCaseList.size();
-        int totalCombinations = 1;
-        for (String[] testCase : testCaseList) {
-            totalCombinations = Math.max(testCase.length, totalCombinations);
-        }
-        for (int i = 0; i < totalCombinations; i++) {
+        for (String args : testCaseList) {
             List<String> params = new ArrayList<>();
+            params.add(JAVA_RUN_CMD);
             params.add(file.getParent());
             params.add(MAIN_CLASS_NAME);
-            for (int j = 0; j < size; j++) {
-                params.add(testCaseList.get(j)[i]);
-            }
-            String paramList = String.join(" ", params);
-            String cmd = JAVA_RUN_CMD + " " + paramList;
+            params.add(args);
+            String cmd = String.join(" ", params);
             String msg = ProcessUtils.processHandler(cmd, time, memory);
             list.add(msg);
         }

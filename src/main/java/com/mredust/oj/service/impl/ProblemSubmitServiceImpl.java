@@ -97,7 +97,7 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         // 获取输入用例
         String testCase = problem.getTestCase();
         String testCaseAnswer = problem.getTestAnswer();
-        List<String[]> testCaseList = JSONUtil.toList(testCase, String[].class);
+        List<String> testCaseList = JSONUtil.toList(testCase, String.class);
         List<String> testCaseAnswerList = JSONUtil.toList(testCaseAnswer, String.class);
         ExecuteRequest executeCodeRequest = ExecuteRequest.builder()
                 .code(code)

@@ -19,7 +19,7 @@ import static com.mredust.oj.codesandbox.constant.CodeSandboxConstant.*;
  */
 public abstract class CodeSandboxTemplate {
     
-    public ExecuteResponse executeCode(String code, List<String[]> testCaseList) {
+    public ExecuteResponse executeCode(String code, List<String> testCaseList) {
         String parentPath = String.format("%s%s%s", System.getProperty("user.dir"), File.separator, WORK_DIR);
         File file;
         List<String> runMessageList;
@@ -52,7 +52,7 @@ public abstract class CodeSandboxTemplate {
     
     protected abstract File saveFile(String code, String parentPath, String fileName);
     
-    protected abstract List<String> runCode(File file, List<String[]> testCaseList, Long[] time, Long[] memory);
+    protected abstract List<String> runCode(File file, List<String> testCaseList, Long[] time, Long[] memory);
     
     
     protected abstract String getErrorMessage(List<String> runMessageList);

@@ -1,5 +1,6 @@
 package com.mredust.oj.model.vo;
 
+import com.mredust.oj.model.dto.problem.TemplateCode;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -80,12 +81,12 @@ public class ProblemVO implements Serializable {
     /**
      * 题目模板代码
      */
-    private String templateCode;
+    private List<TemplateCode> templateCode;
     
     /**
      * 判题用例（List<String[]>）
      */
-    private List<String[]> testCase;
+    private List<String> testCase;
     
     /**
      * 判题用例（List<String[]>）
@@ -95,17 +96,17 @@ public class ProblemVO implements Serializable {
     /**
      * 运行时间限制（ms）
      */
-    private Integer runTime;
+    private Long runTime;
     
     /**
      * 内存限制（KB）
      */
-    private Integer runMemory;
+    private Long runMemory;
     
     /**
      * 栈大小（KB）
      */
-    private Integer runStack;
+    private Long runStack;
     
     
 }

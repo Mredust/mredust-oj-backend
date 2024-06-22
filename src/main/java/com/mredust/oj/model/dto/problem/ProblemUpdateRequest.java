@@ -42,7 +42,7 @@ public class ProblemUpdateRequest implements Serializable {
     /**
      * 题目模板代码
      */
-    private String templateCode;
+    private List<TemplateCode> templateCode;
     
     /**
      * 难度(0-简单 1-中等 2-困难)
@@ -52,12 +52,12 @@ public class ProblemUpdateRequest implements Serializable {
     /**
      * 标签列表（json 数组）
      */
-    private String tags;
+    private List<String> tags;
     
     /**
      * 判题用例（List<String[]>）
      */
-    private List<String[]> testCase;
+    private List<String> testCase;
     
     /**
      * 判题用例答案（List<String[]>）

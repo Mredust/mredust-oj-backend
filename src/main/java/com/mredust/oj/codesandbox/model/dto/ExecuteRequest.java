@@ -21,7 +21,7 @@ public class ExecuteRequest {
     /**
      * 测试用例
      */
-    private List<String[]> testCaseList;
+    private List<String> testCaseList;
     
     /**
      * 输入代码

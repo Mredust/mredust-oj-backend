@@ -28,7 +28,7 @@ public class Problem implements Serializable {
     private String title;
 
     /**
-     * 题目模板代码
+     * 题目模板代码（json）
      */
     private String templateCode;
 
@@ -58,7 +58,7 @@ public class Problem implements Serializable {
     private Integer acceptedNum;
 
     /**
-     * 判题用例（List<String[]>）
+     * 判题用例（List<String>）
      */
     private String testCase;
 

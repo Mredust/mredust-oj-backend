@@ -41,9 +41,9 @@ public class ProblemAddRequest implements Serializable {
     private Long id;
     
     /**
-     * 题目模板代码
+     * 题目模板代码(json)
      */
-    private String templateCode;
+    private List<TemplateCode> templateCode;
     
     /**
      * 难度(0-简单 1-中等 2-困难)
@@ -56,9 +56,9 @@ public class ProblemAddRequest implements Serializable {
     private List<String> tags;
     
     /**
-     * 判题用例（List<String[]>）
+     * 判题用例（List<String>）
      */
-    private List<String[]> testCase;
+    private List<String> testCase;
     
     /**
      * 判题用例答案（List<String[]>）

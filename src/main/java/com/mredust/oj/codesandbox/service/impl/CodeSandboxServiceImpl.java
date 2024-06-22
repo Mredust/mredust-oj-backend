@@ -21,7 +21,7 @@ public class CodeSandboxServiceImpl implements CodeSandboxService {
     
     @Override
     public ExecuteResponse executeCode(ExecuteRequest executeCodeRequest) {
-        List<String[]> testCaseList = executeCodeRequest.getTestCaseList();
+        List<String> testCaseList = executeCodeRequest.getTestCaseList();
         String code = executeCodeRequest.getCode();
         String language = executeCodeRequest.getLanguage();
         if (StringUtils.isBlank(language)) {
