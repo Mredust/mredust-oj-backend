@@ -1,11 +1,11 @@
 package com.mredust.oj.service.impl;
 
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.mapper.ProblemMapper;
@@ -149,10 +149,18 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         }
         ProblemVO problemVo = new ProblemVO();
         BeanUtils.copyProperties(problem, problemVo);
-        problemVo.setTags(JSONUtil.toList(problem.getTags(), String.class));
-        problemVo.setTestCase(JSONUtil.toList(problem.getTestCase(), String.class));
-        problemVo.setTestAnswer(JSONUtil.toList(problem.getTestAnswer(), String.class));
-        problemVo.setTemplateCode(JSONUtil.toList(problem.getTemplateCode(), TemplateCode.class));
+        List<String> tagsList = GSON.fromJson(problem.getTags(), new TypeToken<List<String>>() {
+        }.getType());
+        List<String> testCaseList = GSON.fromJson(problem.getTestCase(), new TypeToken<List<String>>() {
+        }.getType());
+        List<String> testAnswerList = GSON.fromJson(problem.getTestAnswer(), new TypeToken<List<TemplateCode>>() {
+        }.getType());
+        List<TemplateCode> list = GSON.fromJson(problem.getTemplateCode(), new TypeToken<List<TemplateCode>>() {
+        }.getType());
+        problemVo.setTags(tagsList);
+        problemVo.setTestCase(testCaseList);
+        problemVo.setTestAnswer(testAnswerList);
+        problemVo.setTemplateCode(list);
         
         ProblemSubmit problemSubmit = problemSubmitService.getOne(new QueryWrapper<ProblemSubmit>()
                 .select("max(status) as status").lambda()

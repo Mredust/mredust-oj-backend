@@ -61,24 +61,24 @@ public class ProblemAddRequest implements Serializable {
     private List<String> testCase;
     
     /**
-     * 判题用例答案（List<String[]>）
+     * 判题用例答案（List<String>）
      */
     private List<String> testAnswer;
     
     /**
      * 运行时间限制（ms）
      */
-    private Integer runTime;
+    private Long runTime;
     
     /**
      * 内存限制（KB）
      */
-    private Integer runMemory;
+    private Long runMemory;
     
     /**
      * 栈大小（KB）
      */
-    private Integer runStack;
+    private Long runStack;
     
     
 }
