@@ -1,7 +1,7 @@
 package com.mredust.oj.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.mredust.oj.annotation.AuthCheck;
 import com.mredust.oj.common.BaseResponse;
 import com.mredust.oj.common.DeleteRequest;
 import com.mredust.oj.common.ResponseCode;
@@ -19,11 +19,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.mredust.oj.constant.UserConstant.ADMIN_ROLE;
 
@@ -48,13 +45,12 @@ public class ProblemController {
      * 新增题目
      *
      * @param problemAddRequest 新增题目请求
-     * @param request           请求
      * @return 新增的题目id
      */
     @PostMapping("/add")
-    @AuthCheck(role = ADMIN_ROLE)
-    public BaseResponse<Long> addProblem(@RequestBody @Valid ProblemAddRequest problemAddRequest, HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
+    @SaCheckRole(ADMIN_ROLE)
+    public BaseResponse<Long> addProblem(@RequestBody @Valid ProblemAddRequest problemAddRequest) {
+        User loginUser = userService.getLoginUser();
         long problemId = problemService.addProblem(problemAddRequest, loginUser.getId());
         return Result.success(problemId);
     }
@@ -66,7 +62,7 @@ public class ProblemController {
      * @return 是否删除成功
      */
     @DeleteMapping("/delete")
-    @AuthCheck(role = ADMIN_ROLE)
+    @SaCheckRole(ADMIN_ROLE)
     public BaseResponse<Boolean> deleteProblem(@RequestBody @Valid DeleteRequest deleteRequest) {
         Long problemId = deleteRequest.getId();
         Problem problem = problemService.getById(problemId);
@@ -84,7 +80,7 @@ public class ProblemController {
      * @return
      */
     @PutMapping("/update")
-    @AuthCheck(role = ADMIN_ROLE)
+    @SaCheckRole(ADMIN_ROLE)
     public BaseResponse<Boolean> updateProblem(@RequestBody @Valid ProblemUpdateRequest problemUpdateRequest) {
         Problem problem = problemService.getById(problemUpdateRequest.getId());
         if (problem == null) {
@@ -101,12 +97,12 @@ public class ProblemController {
      * @return 题目信息
      */
     @GetMapping("/get")
-    public BaseResponse<ProblemVO> getProblemById(@RequestParam("id") @NotNull Long id, HttpServletRequest request) {
+    public BaseResponse<ProblemVO> getProblemById(@RequestParam("id") @NotNull Long id) {
         Problem problem = problemService.getById(id);
         if (problem == null) {
             throw new BusinessException(ResponseCode.NOT_FOUND);
         }
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userService.getLoginUser();
         ProblemVO problemVO = problemService.objToVo(problem, loginUser.getId());
         return Result.success(problemVO);
     }
@@ -118,11 +114,11 @@ public class ProblemController {
      * @return 题目分页对象
      */
     @PostMapping("/list")
-    public BaseResponse<Page<ProblemVO>> getProblemListByPage(@RequestBody ProblemQueryRequest problemQueryRequest, HttpServletRequest request) {
+    public BaseResponse<Page<ProblemVO>> getProblemListByPage(@RequestBody ProblemQueryRequest problemQueryRequest) {
         if (problemQueryRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userService.getLoginUser();
         Page<ProblemVO> list = problemService.getProblemListByPage(problemQueryRequest, loginUser.getId());
         return Result.success(list);
     }

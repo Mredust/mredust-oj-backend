@@ -120,9 +120,9 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         problemSubmitVO.setRunMemory(0L);
         problemSubmitVO.setRunStack(0L);
         if (runTime > problemRunTime) {
-            handleSubmissionStatus(problemSubmit, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.TIME_LIMIT_EXCEEDED.getText());
+            handleSubmissionStatus(problemSubmitVO, problemSubmit, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.TIME_LIMIT_EXCEEDED.getText());
         } else if (runMemory > problemRunMemory) {
-            handleSubmissionStatus(problemSubmit, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.MEMORY_LIMIT_EXCEEDED.getText());
+            handleSubmissionStatus(problemSubmitVO, problemSubmit, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.MEMORY_LIMIT_EXCEEDED.getText());
         } else {
             if (statusCode.equals(ExecuteResponseEnum.RUN_SUCCESS.getCode())) {
                 boolean allTestCasesPassed = true;
@@ -146,10 +146,10 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
                     updateStatus(problemSubmit);
                     problemMapper.update(null, new UpdateWrapper<Problem>().setSql("accepted_num = accepted_num + 1").eq("id", problem.getId()));
                 } else {
-                    handleSubmissionStatus(problemSubmit, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.WRONG_ANSWER.getText());
+                    handleSubmissionStatus(problemSubmitVO, problemSubmit, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.WRONG_ANSWER.getText());
                 }
             } else {
-                handleSubmissionStatus(problemSubmit, ProblemSubmitStatusEnum.FAILED, msg, stderr);
+                handleSubmissionStatus(problemSubmitVO, problemSubmit, ProblemSubmitStatusEnum.FAILED, msg, stderr);
             }
         }
         BeanUtil.copyProperties(problemSubmit, problemSubmitVO);
@@ -170,11 +170,14 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
     }
     
     
-    private void handleSubmissionStatus(ProblemSubmit problemSubmit, ProblemSubmitStatusEnum status, String message, String... errorMessage) {
+    private void handleSubmissionStatus(ProblemSubmitVO problemSubmitVO, ProblemSubmit problemSubmit, ProblemSubmitStatusEnum status, String message, String... errorMessage) {
         problemSubmit.setStatus(status.getCode());
         problemSubmit.setMessage(message);
         problemSubmit.setErrorMessage(errorMessage[0]);
         updateStatus(problemSubmit);
+        problemSubmitVO.setErrorMessage(errorMessage[0]);
+        problemSubmitVO.setMessage(message);
+        problemSubmitVO.setStatus(status.getCode());
     }
     
     private void updateStatus(ProblemSubmit problemSubmit) {

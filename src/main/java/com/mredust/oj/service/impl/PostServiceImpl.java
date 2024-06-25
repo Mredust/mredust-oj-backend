@@ -171,11 +171,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
      * 分页获取帖子视图对象
      *
      * @param postQueryRequest 查询条件
-     * @param request          请求
      * @return 帖子视图对象分页
      */
     @Override
-    public Page<PostVO> getPostVoPage(PostQueryRequest postQueryRequest, HttpServletRequest request) {
+    public Page<PostVO> getPostVoPage(PostQueryRequest postQueryRequest ) {
         Page<Post> postPage = getPostListByPage(postQueryRequest);
         List<Post> postList = postPage.getRecords();
         Page<PostVO> postVOPage = new Page<>(postPage.getCurrent(), postPage.getSize(), postPage.getTotal());
@@ -188,7 +187,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 已登录，获取用户点赞、收藏状态
         Map<Long, Boolean> postIdHasThumbMap = new HashMap<>();
         Map<Long, Boolean> postIdHasFavourMap = new HashMap<>();
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userService.getLoginUser();
         if (loginUser != null) {
             Set<Long> postIdSet = postList.stream().map(Post::getId).collect(Collectors.toSet());
             // 获取点赞

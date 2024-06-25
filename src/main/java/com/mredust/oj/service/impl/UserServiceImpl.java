@@ -1,5 +1,6 @@
 package com.mredust.oj.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
@@ -81,11 +82,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      *
      * @param account  用户账户
      * @param password 用户密码
-     * @param request  请求
      * @return 用户信息
      */
     @Override
-    public UserVO userLogin(String account, String password, HttpServletRequest request) {
+    public UserVO userLogin(String account, String password) {
         // 校验
         if (StringUtils.isAnyBlank(account, password)) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
@@ -109,7 +109,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (AccountStatusEnum.BAN.getCode().equals(status)) {
             throw new BusinessException(ResponseCode.PARAMS_ERROR, "账户已被封禁");
         }
-        request.getSession().setAttribute(USER_LOGIN_KEY, user);
+        StpUtil.login(user.getId());
+        StpUtil.getSession().set(USER_LOGIN_KEY, user);
         return this.getUserVO(user);
     }
     
@@ -133,35 +134,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     /**
      * 用户注销
      *
-     * @param request 请求
      * @return 是否注销成功
      */
     @Override
-    public boolean userLogout(HttpServletRequest request) {
-        if (request.getSession().getAttribute(USER_LOGIN_KEY) == null) {
+    public boolean userLogout() {
+        if (StpUtil.getLoginIdDefaultNull() == null) {
             throw new BusinessException(ResponseCode.NOT_LOGIN);
         }
         // 移除登录态
-        request.getSession().removeAttribute(USER_LOGIN_KEY);
+        StpUtil.logout();
         return true;
     }
     
     /**
      * 获取当前登录用户
      *
-     * @param request 请求
      * @return 用户
      */
     @Override
-    public User getLoginUser(HttpServletRequest request) {
+    public User getLoginUser( ) {
         // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_KEY);
+        Object userObj = StpUtil.getSession().get(USER_LOGIN_KEY);
         User currentUser = (User) userObj;
         if (currentUser == null || currentUser.getId() == null) {
-            throw new BusinessException(ResponseCode.NOT_LOGIN);
-        }
-        currentUser = this.getById(currentUser.getId());
-        if (currentUser == null) {
             throw new BusinessException(ResponseCode.NOT_LOGIN);
         }
         return currentUser;
@@ -237,11 +232,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public Page<User> getUserListByPage(UserQueryRequest userQueryRequest) {
         Long id = userQueryRequest.getId();
-        String account = userQueryRequest.getAccount();
-        String username = userQueryRequest.getUsername();
         Integer sex = userQueryRequest.getSex();
         Integer status = userQueryRequest.getStatus();
         Integer role = userQueryRequest.getRole();
+        String account = userQueryRequest.getAccount();
+        String username = userQueryRequest.getUsername();
         String sortField = userQueryRequest.getSortField();
         String sortOrder = userQueryRequest.getSortOrder();
         long pageNum = userQueryRequest.getPageNum();
@@ -250,11 +245,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Page<User> userPage = new Page<>(pageNum, pageSize);
         return Db.lambdaQuery(User.class)
                 .eq(id != null, User::getId, id)
-                .like(StringUtils.isNotBlank(account), User::getAccount, account)
-                .like(StringUtils.isNotBlank(username), User::getUsername, username)
                 .eq(role != null, User::getRole, role)
                 .eq(sex != null, User::getSex, sex)
                 .eq(status != null, User::getStatus, status)
+                .like(StringUtils.isNotBlank(account), User::getAccount, account)
+                .like(StringUtils.isNotBlank(username), User::getUsername, username)
                 .last(StringUtils.isNotBlank(sortField), "order by " + sortField + " " + sortOrder)
                 .page(userPage);
     }

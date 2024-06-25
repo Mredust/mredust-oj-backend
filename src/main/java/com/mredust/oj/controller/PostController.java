@@ -1,7 +1,7 @@
 package com.mredust.oj.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.mredust.oj.annotation.AuthCheck;
 import com.mredust.oj.common.BaseResponse;
 import com.mredust.oj.common.DeleteRequest;
 import com.mredust.oj.common.ResponseCode;
@@ -19,7 +19,6 @@ import com.mredust.oj.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 import static com.mredust.oj.constant.UserConstant.ADMIN_ROLE;
 
@@ -43,15 +42,14 @@ public class PostController {
      * 新增帖子
      *
      * @param postAddRequest 新增帖子请求
-     * @param request        请求
      * @return 新增的帖子id
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addPost(@RequestBody PostAddRequest postAddRequest, HttpServletRequest request) {
+    public BaseResponse<Long> addPost(@RequestBody PostAddRequest postAddRequest) {
         if (postAddRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userService.getLoginUser();
         long postId = postService.addPost(postAddRequest, loginUser.getId());
         return Result.success(postId);
     }
@@ -60,11 +58,10 @@ public class PostController {
      * 删除帖子
      *
      * @param deleteRequest 删除请求
-     * @param request       请求
      * @return 是否删除成功
      */
     @DeleteMapping("/delete")
-    public BaseResponse<Boolean> deletePost(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> deletePost(@RequestBody DeleteRequest deleteRequest) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
@@ -73,7 +70,7 @@ public class PostController {
         if (post == null) {
             throw new BusinessException(ResponseCode.NOT_FOUND);
         }
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userService.getLoginUser();
         if (!loginUser.getId().equals(post.getUserId()) || !RoleEnum.ADMIN.getCode().equals(loginUser.getRole())) {
             throw new BusinessException(ResponseCode.NO_AUTH);
         }
@@ -121,7 +118,7 @@ public class PostController {
      * @return 帖子分页对象
      */
     @PostMapping("/list")
-    @AuthCheck(role = ADMIN_ROLE)
+    @SaCheckRole(ADMIN_ROLE)
     public BaseResponse<Page<Post>> getPostListByPage(@RequestBody PostQueryRequest postQueryRequest) {
         if (postQueryRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
@@ -134,15 +131,14 @@ public class PostController {
      * 分页获取列表（封装类）
      *
      * @param postQueryRequest 查询条件
-     * @param request          请求
      * @return 帖子分页对象
      */
     @PostMapping("/list/vo")
-    public BaseResponse<Page<PostVO>> getPostVoPage(@RequestBody PostQueryRequest postQueryRequest, HttpServletRequest request) {
+    public BaseResponse<Page<PostVO>> getPostVoPage(@RequestBody PostQueryRequest postQueryRequest) {
         if (postQueryRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
-        Page<PostVO> list = postService.getPostVoPage(postQueryRequest, request);
+        Page<PostVO> list = postService.getPostVoPage(postQueryRequest);
         return Result.success(list);
     }
     

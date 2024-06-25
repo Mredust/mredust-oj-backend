@@ -1,6 +1,7 @@
 package com.mredust.oj.exception;
 
 
+import cn.dev33.satoken.exception.SaTokenException;
 import com.mredust.oj.common.BaseResponse;
 import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.common.Result;
@@ -12,10 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.*;
 
 
 /**
@@ -32,10 +30,26 @@ public class GlobalExceptionHandler {
     }
     
     
+    @ExceptionHandler(SaTokenException.class)
+    public BaseResponse handlerSaTokenException(SaTokenException e) {
+        // 状态码细则：https://sa-token.cc/doc.html#/fun/exception-code?id=%e5%bc%82%e5%b8%b8%e7%bb%86%e5%88%86%e7%8a%b6%e6%80%81%e7%a0%81
+        log.info(e.getMessage() + " ：" + e.getCode());
+        List<Integer> unLoginCodes = new ArrayList<>(Arrays.asList(11001, 11002, 11003, 11011, 11012, 11013));
+        if (unLoginCodes.contains(e.getCode())) {
+            return Result.fail(ResponseCode.NOT_LOGIN);
+        }
+        if (e.getCode() == 11041) {
+            return Result.fail(ResponseCode.NO_AUTH);
+        }
+        // 默认的提示
+        return Result.fail(ResponseCode.FAIL, "服务器繁忙，请稍后重试...");
+    }
+    
+    
     @ExceptionHandler(RuntimeException.class)
     public BaseResponse runtimeException(RuntimeException ex) {
         log.error("runtimeException：{}", ex.getMessage());
-        return Result.fail(ResponseCode.FAIL, "系统错误");
+        return Result.fail(ResponseCode.FAIL, "服务器繁忙，请稍后重试...");
     }
     
     @ExceptionHandler(ConstraintViolationException.class)

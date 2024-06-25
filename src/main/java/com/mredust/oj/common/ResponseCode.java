@@ -14,7 +14,7 @@ public enum ResponseCode {
     FAIL(500, "操作失败"),
     NO_AUTH(401, "无权限"),
     FORBIDDEN(403, "禁止访问"),
-    NOT_FOUND(404, "未找到"),
+    NOT_FOUND(404, "数据未找到"),
     METHOD_NOT_ALLOWED(405, "方法不允许"),
     SYSTEM_ERROR(500, "服务器内部错误"),
     BAD_GATEWAY(502, "错误的网关"),

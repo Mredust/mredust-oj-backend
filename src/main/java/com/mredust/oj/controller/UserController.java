@@ -1,7 +1,7 @@
 package com.mredust.oj.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.mredust.oj.annotation.AuthCheck;
 import com.mredust.oj.common.BaseResponse;
 import com.mredust.oj.common.DeleteRequest;
 import com.mredust.oj.common.ResponseCode;
@@ -16,7 +16,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 import static com.mredust.oj.constant.UserConstant.ADMIN_ROLE;
 
@@ -59,11 +58,10 @@ public class UserController {
      * 用户登录
      *
      * @param userLoginRequest 用户登录请求
-     * @param request          请求
      * @return 用户信息
      */
     @PostMapping("/login")
-    public BaseResponse<UserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<UserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest) {
         if (userLoginRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
@@ -72,34 +70,29 @@ public class UserController {
         if (StringUtils.isAnyBlank(account, password)) {
             throw new BusinessException(ResponseCode.PARAMS_ERROR);
         }
-        UserVO userVO = userService.userLogin(account, password, request);
+        UserVO userVO = userService.userLogin(account, password);
         return Result.success(userVO);
     }
     
     /**
      * 用户注销
      *
-     * @param request
-     * @return
+     * @return 是否注销成功
      */
     @PostMapping("/logout")
-    public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
-        if (request == null) {
-            throw new BusinessException(ResponseCode.NOT_LOGIN);
-        }
-        boolean result = userService.userLogout(request);
+    public BaseResponse<Boolean> userLogout() {
+        boolean result = userService.userLogout();
         return Result.success(result);
     }
     
     /**
      * 获取当前登录用户
      *
-     * @param request 请求
      * @return 当前登录用户
      */
     @GetMapping("/get/login-user")
-    public BaseResponse<UserVO> getLoginUser(HttpServletRequest request) {
-        User user = userService.getLoginUser(request);
+    public BaseResponse<UserVO> getLoginUser() {
+        User user = userService.getLoginUser();
         return Result.success(userService.getUserVO(user));
     }
     // endregion
@@ -111,12 +104,11 @@ public class UserController {
      * 添加用户
      *
      * @param userAddRequest 用户添加请求
-     * @param request        请求
      * @return 是否添加成功
      */
     @PostMapping("/add")
-    @AuthCheck(role = ADMIN_ROLE)
-    public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request) {
+    @SaCheckRole(ADMIN_ROLE)
+    public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
         if (userAddRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
@@ -134,16 +126,20 @@ public class UserController {
      * 删除用户
      *
      * @param deleteRequest 删除请求数据
-     * @param request       请求
      * @return 是否删除成功
      */
     @DeleteMapping("/delete")
-    @AuthCheck(role = ADMIN_ROLE)
-    public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+    @SaCheckRole(ADMIN_ROLE)
+    public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ResponseCode.PARAMS_ERROR);
         }
-        boolean deleteResult = userService.removeById(deleteRequest.getId());
+        Long id = deleteRequest.getId();
+        User user = userService.getById(id);
+        if (user == null) {
+            throw new BusinessException(ResponseCode.NOT_FOUND);
+        }
+        boolean deleteResult = userService.removeById(id);
         return deleteResult ? Result.success("删除成功") : Result.fail("删除失败");
     }
     
@@ -154,7 +150,7 @@ public class UserController {
      * @return 是否更新成功
      */
     @PutMapping("/update")
-    @AuthCheck(role = ADMIN_ROLE)
+    @SaCheckRole(ADMIN_ROLE)
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
@@ -176,12 +172,11 @@ public class UserController {
      * 更新个人信息
      *
      * @param userUpdateMyRequest 更新个人信息
-     * @param request             请求
      * @return 是否更新成功
      */
     @PutMapping("/update/my")
-    public BaseResponse<Boolean> updateMyUser(@RequestBody UserUpdateMyRequest userUpdateMyRequest, HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
+    public BaseResponse<Boolean> updateMyUser(@RequestBody UserUpdateMyRequest userUpdateMyRequest) {
+        User loginUser = userService.getLoginUser();
         if (loginUser == null) {
             throw new BusinessException(ResponseCode.NOT_LOGIN);
         }
@@ -204,13 +199,12 @@ public class UserController {
     /**
      * 根据 id 获取用户
      *
-     * @param id      用户id
-     * @param request 请求
+     * @param id 用户id
      * @return 用户信息
      */
     @GetMapping("/get")
-    @AuthCheck(role = ADMIN_ROLE)
-    public BaseResponse<User> getUserById(@RequestParam("id") long id, HttpServletRequest request) {
+    @SaCheckRole(ADMIN_ROLE)
+    public BaseResponse<User> getUserById(@RequestParam("id") long id) {
         if (id <= 0) {
             throw new BusinessException(ResponseCode.PARAMS_ERROR);
         }
@@ -228,7 +222,7 @@ public class UserController {
      * @return 用户列表
      */
     @PostMapping("/list")
-    @AuthCheck(role = ADMIN_ROLE)
+    @SaCheckRole(ADMIN_ROLE)
     public BaseResponse<Page<User>> getUserListByPage(@RequestBody UserQueryRequest userQueryRequest) {
         if (userQueryRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);

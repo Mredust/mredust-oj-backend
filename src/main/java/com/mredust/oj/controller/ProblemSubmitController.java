@@ -7,7 +7,6 @@ import com.mredust.oj.common.Result;
 import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.model.dto.problemsubmit.ProblemSubmitAddRequest;
 import com.mredust.oj.model.entity.User;
-import com.mredust.oj.model.enums.problem.ProblemSubmitStatusEnum;
 import com.mredust.oj.model.vo.ProblemSubmitVO;
 import com.mredust.oj.service.ProblemSubmitService;
 import com.mredust.oj.service.UserService;
@@ -16,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -42,13 +40,13 @@ public class ProblemSubmitController {
      * @return 提交记录的 id
      */
     @PostMapping("/execute")
-    public BaseResponse<ProblemSubmitVO> problemSubmit(@RequestBody @NotNull @Valid ProblemSubmitAddRequest problemSubmitAddRequest, HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
+    public BaseResponse<ProblemSubmitVO> problemSubmit(@RequestBody @NotNull @Valid ProblemSubmitAddRequest problemSubmitAddRequest) {
+        User loginUser = userService.getLoginUser();
         if (loginUser == null) {
             throw new BusinessException(ResponseCode.NOT_LOGIN);
         }
         ProblemSubmitVO submitResult = problemSubmitService.problemSubmit(problemSubmitAddRequest, loginUser);
-        return  Result.success(submitResult);
+        return Result.success(submitResult);
     }
     
     /**
@@ -58,8 +56,8 @@ public class ProblemSubmitController {
      * @return 提交记录的详细信息
      */
     @GetMapping("/get")
-    public BaseResponse<ProblemSubmitVO> getProblemSubmitVoById(@RequestParam("id") Long id, HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
+    public BaseResponse<ProblemSubmitVO> getProblemSubmitVoById(@RequestParam("id") Long id) {
+        User loginUser = userService.getLoginUser();
         if (loginUser == null) {
             throw new BusinessException(ResponseCode.NOT_LOGIN);
         }

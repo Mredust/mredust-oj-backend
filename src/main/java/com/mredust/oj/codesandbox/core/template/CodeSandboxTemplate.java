@@ -81,7 +81,7 @@ public abstract class CodeSandboxTemplate {
         } else {
             executeResponse.setStdout(dataList[0]);
             executeResponse.setRunTime(time[0]);
-            memory[0] = memory[0] / (1024);
+            memory[0] = memory[0] / (1024 * 1024);
             executeResponse.setRunMemory(memory[0]);
         }
         return executeResponse;

@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * 帖子点赞接口
@@ -35,16 +34,15 @@ public class PostThumbController {
      * 点赞 / 取消点赞
      *
      * @param postThumbAddRequest 帖子点赞请求
-     * @param request             请求
      * @return resultNum 本次点赞变化数
      */
     @PostMapping("/")
-    public BaseResponse<Integer> postThumb(@RequestBody PostThumbAddRequest postThumbAddRequest, HttpServletRequest request) {
+    public BaseResponse<Integer> postThumb(@RequestBody PostThumbAddRequest postThumbAddRequest) {
         if (postThumbAddRequest == null || postThumbAddRequest.getPostId() <= 0) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
         // 登录才能点赞
-        final User loginUser = userService.getLoginUser(request);
+        final User loginUser = userService.getLoginUser();
         if (loginUser == null) {
             throw new BusinessException(ResponseCode.NOT_LOGIN);
         }

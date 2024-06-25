@@ -8,8 +8,6 @@ import com.mredust.oj.model.dto.post.PostUpdateRequest;
 import com.mredust.oj.model.entity.Post;
 import com.mredust.oj.model.vo.PostVO;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * @author Mredust
  * @description 针对表【post(帖子表)】的数据库操作Service
@@ -54,8 +52,7 @@ public interface PostService extends IService<Post> {
      * 分页获取帖子视图对象
      *
      * @param postQueryRequest 查询条件
-     * @param request          请求
      * @return 帖子视图对象分页
      */
-    Page<PostVO> getPostVoPage(PostQueryRequest postQueryRequest, HttpServletRequest request);
+    Page<PostVO> getPostVoPage(PostQueryRequest postQueryRequest);
 }

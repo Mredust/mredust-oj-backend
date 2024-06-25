@@ -7,8 +7,6 @@ import com.mredust.oj.model.dto.user.UserQueryRequest;
 import com.mredust.oj.model.entity.User;
 import com.mredust.oj.model.vo.UserVO;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * @author Mredust
  * @description 针对表【user(用户表)】的数据库操作Service
@@ -30,10 +28,9 @@ public interface UserService extends IService<User> {
      *
      * @param account  用户账户
      * @param password 用户密码
-     * @param request  请求
      * @return 用户信息
      */
-    UserVO userLogin(String account, String password, HttpServletRequest request);
+    UserVO userLogin(String account, String password);
     
     
     /**
@@ -47,20 +44,20 @@ public interface UserService extends IService<User> {
     /**
      * 用户注销
      *
-     * @param request 请求
      * @return 是否注销成功
      */
-    boolean userLogout(HttpServletRequest request);
+    boolean userLogout();
     
     /**
      * 获取当前登录用户
-     * @param request 请求
+     *
      * @return 用户
      */
-    User getLoginUser(HttpServletRequest request);
+    User getLoginUser();
     
     /**
      * 添加用户
+     *
      * @param userAddRequest 用户添加请求
      * @return 用户 id
      */
@@ -68,6 +65,7 @@ public interface UserService extends IService<User> {
     
     /**
      * 获取用户列表
+     *
      * @param userQueryRequest 用户查询请求
      * @return 用户列表
      */
