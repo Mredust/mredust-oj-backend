@@ -12,6 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class SaTokenConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new SaInterceptor()).addPathPatterns("/**").excludePathPatterns("/test/**");
+        registry.addInterceptor(new SaInterceptor()).addPathPatterns("/**")
+                .excludePathPatterns("/problem/**");
     }
 }

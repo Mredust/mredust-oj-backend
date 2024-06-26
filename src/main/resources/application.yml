@@ -23,6 +23,12 @@ spring:
     port: 6379
     timeout: 5000
     password: motianze4
+    lettuce:
+      pool:
+        max-active: 200
+        max-wait: -1ms
+        max-idle: 10
+        min-idle: 0
   # 文件上传
   servlet:
     multipart:

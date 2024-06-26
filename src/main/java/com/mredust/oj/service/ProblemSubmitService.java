@@ -1,7 +1,9 @@
 package com.mredust.oj.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mredust.oj.model.dto.problemsubmit.ProblemSubmitAddRequest;
+import com.mredust.oj.model.dto.problemsubmit.ProblemSubmitQueryRequest;
 import com.mredust.oj.model.entity.ProblemSubmit;
 import com.mredust.oj.model.entity.User;
 import com.mredust.oj.model.vo.ProblemSubmitVO;
@@ -16,4 +18,6 @@ public interface ProblemSubmitService extends IService<ProblemSubmit> {
     ProblemSubmitVO problemSubmit(ProblemSubmitAddRequest problemSubmitAddRequest, User loginUser);
     
     ProblemSubmitVO getProblemSubmitVoById(Long id);
+    
+    Page<ProblemSubmitVO> getProblemSubmitListByPage(ProblemSubmitQueryRequest problemSubmitQueryRequest);
 }

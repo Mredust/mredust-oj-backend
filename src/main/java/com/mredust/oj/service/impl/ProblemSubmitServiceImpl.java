@@ -3,6 +3,7 @@ package com.mredust.oj.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.mredust.oj.codesandbox.model.dto.ExecuteRequest;
@@ -14,13 +15,16 @@ import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.mapper.ProblemMapper;
 import com.mredust.oj.mapper.ProblemSubmitMapper;
 import com.mredust.oj.model.dto.problemsubmit.ProblemSubmitAddRequest;
+import com.mredust.oj.model.dto.problemsubmit.ProblemSubmitQueryRequest;
 import com.mredust.oj.model.entity.Problem;
 import com.mredust.oj.model.entity.ProblemSubmit;
 import com.mredust.oj.model.entity.User;
 import com.mredust.oj.model.enums.problem.JudgeInfoEnum;
 import com.mredust.oj.model.enums.problem.ProblemSubmitStatusEnum;
 import com.mredust.oj.model.vo.ProblemSubmitVO;
+import com.mredust.oj.service.ProblemService;
 import com.mredust.oj.service.ProblemSubmitService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +43,9 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
     
     @Resource
     private ProblemMapper problemMapper;
+    
+    @Resource
+    private ProblemService problemService;
     
     @Resource
     private CodeSandboxService codeSandboxService;
@@ -185,6 +192,28 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         if (!flag) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR, "题目状态更新失败");
         }
+    }
+    
+    @Override
+    public Page<ProblemSubmitVO> getProblemSubmitListByPage(ProblemSubmitQueryRequest problemSubmitQueryRequest) {
+        String language = problemSubmitQueryRequest.getLanguage();
+        Integer status = problemSubmitQueryRequest.getStatus();
+        Long problemId = problemSubmitQueryRequest.getQuestionId();
+        Long userId = problemSubmitQueryRequest.getUserId();
+        long pageNum = problemSubmitQueryRequest.getPageNum();
+        long pageSize = problemSubmitQueryRequest.getPageSize();
+        String sortField = problemSubmitQueryRequest.getSortField();
+        String sortOrder = problemSubmitQueryRequest.getSortOrder();
+        Page<ProblemSubmit> page = new Page<>(pageNum, pageSize);
+        
+        Db.lambdaQuery(ProblemSubmit.class)
+                .like(StringUtils.isNotBlank(language), ProblemSubmit::getLanguage, language)
+                .eq(status != null, ProblemSubmit::getStatus, status)
+                .eq(problemId != null, ProblemSubmit::getProblemId, problemId)
+                .eq(userId != null, ProblemSubmit::getProblemId, userId)
+                .last(StringUtils.isNotBlank(sortField), "order by " + sortField + " " + sortOrder)
+                .page(page);
+        return null;
     }
 }
 

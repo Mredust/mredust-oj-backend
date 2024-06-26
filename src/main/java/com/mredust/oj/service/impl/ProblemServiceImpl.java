@@ -1,12 +1,15 @@
 package com.mredust.oj.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.google.gson.Gson;
 import com.mredust.oj.common.ResponseCode;
+import com.mredust.oj.config.redis.RedisService;
 import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.mapper.ProblemMapper;
 import com.mredust.oj.model.dto.problem.ProblemAddRequest;
@@ -28,7 +31,11 @@ import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.mredust.oj.constant.RedisConstant.PROBLEM_KEY;
+import static com.mredust.oj.constant.RedisConstant.TIMEOUT_TTL;
 
 
 /**
@@ -45,7 +52,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     @Resource
     private ProblemSubmitService problemSubmitService;
     
-    private static final Gson GSON = new Gson();
+    @Resource
+    private RedisService redisService;
     
     /**
      * 新增题目
@@ -54,15 +62,16 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
      * @return 新增的题目id
      */
     @Override
-    public long addProblem(ProblemAddRequest problemAddRequest, long userId) {
+    public long addProblem(ProblemAddRequest problemAddRequest) {
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemAddRequest, problem);
+        Long userId = userService.getLoginUser().getId();
         problem.setUserId(userId);
-        
-        problem.setTemplateCode(JSONUtil.toJsonStr(problemAddRequest.getTemplateCode()));
-        problem.setTags(JSONUtil.toJsonStr(problemAddRequest.getTags()));
-        problem.setTestCase(JSONUtil.toJsonStr(problemAddRequest.getTestCase()));
-        problem.setTestAnswer(JSONUtil.toJsonStr(problemAddRequest.getTestAnswer()));
+        List<TemplateCode> templateCode = problemAddRequest.getTemplateCode();
+        List<String> tags = problemAddRequest.getTags();
+        List<String> testCase = problemAddRequest.getTestCase();
+        List<String> testAnswer = problemAddRequest.getTestAnswer();
+        fieldFill(problem, templateCode, tags, testCase, testAnswer);
         boolean result = this.save(problem);
         if (!result) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR);
@@ -80,38 +89,73 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     public boolean updateProblem(ProblemUpdateRequest problemUpdateRequest) {
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemUpdateRequest, problem);
-        problem.setTemplateCode(JSONUtil.toJsonStr(problemUpdateRequest.getTemplateCode()));
-        problem.setTags(JSONUtil.toJsonStr(problemUpdateRequest.getTags()));
-        problem.setTestCase(JSONUtil.toJsonStr(problemUpdateRequest.getTestCase()));
-        problem.setTestAnswer(JSONUtil.toJsonStr(problemUpdateRequest.getTestAnswer()));
+        List<TemplateCode> templateCode = problemUpdateRequest.getTemplateCode();
+        List<String> tags = problemUpdateRequest.getTags();
+        List<String> testCase = problemUpdateRequest.getTestCase();
+        List<String> testAnswer = problemUpdateRequest.getTestAnswer();
+        fieldFill(problem, templateCode, tags, testCase, testAnswer);
         boolean result = this.updateById(problem);
         if (!result) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR);
         }
+        String problemKey = PROBLEM_KEY + problem.getId();
+        String jsonStr = JSONUtil.toJsonStr(problem);
+        long timeout = TIMEOUT_TTL + RandomUtil.randomLong(1, 3);
+        redisService.setCacheObject(problemKey, jsonStr, timeout, TimeUnit.DAYS);
         return true;
     }
     
+    private void fieldFill(Problem problem, List<TemplateCode> templateCode, List<String> tags, List<String> testCase, List<String> testAnswer) {
+        if (templateCode != null) {
+            problem.setTemplateCode(JSONUtil.toJsonStr(templateCode));
+        }
+        if (tags != null) {
+            problem.setTags(JSONUtil.toJsonStr(tags));
+        }
+        if (testCase != null) {
+            problem.setTestCase(JSONUtil.toJsonStr(testCase));
+        }
+        if (testAnswer != null) {
+            problem.setTestAnswer(JSONUtil.toJsonStr(testAnswer));
+        }
+    }
     
-    /**
-     * 分页获取题目列表
-     *
-     * @param problemQueryRequest 查询条件
-     * @return 题目分页对象
-     */
+    
     @Override
-    public Page<ProblemVO> getProblemListByPage(ProblemQueryRequest problemQueryRequest, Long userId) {
-        String keyword = problemQueryRequest.getKeyword();
-        List<String> tags = problemQueryRequest.getTags();
-        Integer status = problemQueryRequest.getStatus();
-        Integer difficulty = problemQueryRequest.getDifficulty();
+    public Page<Problem> getProblemListByPage(ProblemQueryRequest problemQueryRequest) {
         long pageNum = problemQueryRequest.getPageNum();
         long pageSize = problemQueryRequest.getPageSize();
+        Page<Problem> page = new Page<>(pageNum, pageSize);
+        return conditionQueryWrapper(problemQueryRequest).page(page);
+    }
+    
+    
+    private LambdaQueryChainWrapper<Problem> conditionQueryWrapper(ProblemQueryRequest problemQueryRequest) {
+        Long id = problemQueryRequest.getId();
+        String keyword = problemQueryRequest.getKeyword();
+        List<String> tags = problemQueryRequest.getTags();
+        Integer difficulty = problemQueryRequest.getDifficulty();
         String sortField = problemQueryRequest.getSortField();
         String sortOrder = problemQueryRequest.getSortOrder();
-        Page<Problem> problemPage = new Page<>(pageNum, pageSize);
-        // 用户提交的题库
+        return Db.lambdaQuery(Problem.class)
+                .eq(id != null, Problem::getId, id)
+                .eq(difficulty != null, Problem::getDifficulty, difficulty)
+                .like(StringUtils.isNotBlank(keyword), Problem::getTitle, keyword).or()
+                .like(StringUtils.isNotBlank(keyword), Problem::getContent, keyword)
+                .like(tags != null && !tags.isEmpty(), Problem::getTags, tags)
+                .last(StringUtils.isNotBlank(sortField), "order by " + sortField + " " + sortOrder);
+    }
+    
+    // todo：优化条件查询
+    @Override
+    public Page<ProblemVO> getProblemListVoByPage(ProblemQueryRequest problemQueryRequest) {
+        Integer status = problemQueryRequest.getStatus();
+        long pageNum = problemQueryRequest.getPageNum();
+        long pageSize = problemQueryRequest.getPageSize();
+        Page<ProblemVO> problemVOPage = new Page<>(pageNum, pageSize);
+        Object userId = StpUtil.getLoginIdDefaultNull();
         Set<Long> submitIds = Collections.emptySet();
-        if (status != null) {
+        if (userId != null && status != null) {
             submitIds = Db.lambdaQuery(ProblemSubmit.class)
                     .eq(ProblemSubmit::getUserId, userId)
                     .eq(ProblemSubmit::getStatus, status)
@@ -119,22 +163,16 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                     .stream().map(ProblemSubmit::getProblemId)
                     .collect(Collectors.toSet());
         }
-        // todo 标签查询
-        // 获取全部题库
-        Page<Problem> problemPageResult = Db.lambdaQuery(Problem.class)
-                .eq(difficulty != null, Problem::getDifficulty, difficulty)
-                .like(StringUtils.isNotBlank(keyword), Problem::getTitle, keyword).or()
-                .like(StringUtils.isNotBlank(keyword), Problem::getContent, keyword)
-                .last(StringUtils.isNotBlank(sortField), "order by " + sortField + " " + sortOrder)
+      
+        Page<Problem> problemPage = conditionQueryWrapper(problemQueryRequest)
                 .in(!submitIds.isEmpty(), Problem::getId, submitIds)
-                .page(problemPage);
-        
-        List<ProblemVO> records = problemPageResult.getRecords().stream()
-                .map(problem -> objToVo(problem, userId))
+                .page(new Page<>(pageNum, pageSize));
+        List<ProblemVO> problemVOList = problemPage.getRecords().stream()
+                .map(this::objToVo)
                 .collect(Collectors.toList());
-        Page<ProblemVO> page = new Page<>(pageNum, pageSize, problemPageResult.getTotal());
-        page.setRecords(records);
-        return page;
+        problemVOPage.setRecords(problemVOList);
+        problemVOPage.setTotal(problemPage.getTotal());
+        return problemVOPage;
     }
     
     /**
@@ -144,33 +182,36 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
      * @return
      */
     @Override
-    public ProblemVO objToVo(Problem problem, Long userId) {
+    public ProblemVO objToVo(Problem problem) {
         if (problem == null) {
             return null;
         }
+        Object userId = StpUtil.getLoginIdDefaultNull();
         ProblemVO problemVo = new ProblemVO();
         BeanUtils.copyProperties(problem, problemVo);
-        
-        
         problemVo.setTags(JSONUtil.toList(problem.getTags(), String.class));
         problemVo.setTestCase(JSONUtil.toList(problem.getTestCase(), String.class));
         problemVo.setTestAnswer(JSONUtil.toList(problem.getTestAnswer(), String.class));
         problemVo.setTemplateCode(JSONUtil.toList(problem.getTemplateCode(), TemplateCode.class));
-        
-        
-        ProblemSubmit problemSubmit = problemSubmitService.getOne(new QueryWrapper<ProblemSubmit>()
-                .select("max(status) as status").lambda()
-                .eq(ProblemSubmit::getProblemId, problem.getId())
-                .eq(ProblemSubmit::getUserId, userId));
-        if (problemSubmit == null) {
-            problemVo.setStatus(ProblemSubmitStatusEnum.WAITING.getText());
+        if (userId != null) {
+            ProblemSubmit problemSubmit = problemSubmitService.getOne(new QueryWrapper<ProblemSubmit>()
+                    .select("max(status) as status").lambda()
+                    .eq(ProblemSubmit::getProblemId, problem.getId())
+                    .eq(ProblemSubmit::getUserId, userId));
+            Integer problemSubmitStatus = problemSubmit.getStatus();
+            if (problemSubmitStatus != null) {
+                String text = ProblemSubmitStatusEnum.getProblemSubmitTextByCode(problemSubmitStatus);
+                problemVo.setStatus(text);
+            } else {
+                problemVo.setStatus(ProblemSubmitStatusEnum.WAITING.getText());
+            }
             return problemVo;
         }
-        Integer problemSubmitStatus = problemSubmit.getStatus();
-        String text = ProblemSubmitStatusEnum.getProblemSubmitTextByCode(problemSubmitStatus);
-        problemVo.setStatus(text);
+        problemVo.setStatus(ProblemSubmitStatusEnum.WAITING.getText());
         return problemVo;
     }
+    
+    
 }
 
 

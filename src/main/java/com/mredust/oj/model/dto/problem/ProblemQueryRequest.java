@@ -1,7 +1,6 @@
 package com.mredust.oj.model.dto.problem;
 
 import com.mredust.oj.common.PageRequest;
-import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,6 +15,10 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ProblemQueryRequest extends PageRequest implements Serializable {
+    /**
+     * 题目id
+     */
+    private Long id;
     /**
      * 关键词
      */

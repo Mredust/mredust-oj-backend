@@ -32,7 +32,7 @@ public class ProblemVO implements Serializable {
     private String content;
     
     /**
-     * 难度
+     * 难度(0-简单 1-中等 2-困难)
      */
     private Integer difficulty;
     

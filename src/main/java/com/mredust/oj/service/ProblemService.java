@@ -1,5 +1,6 @@
 package com.mredust.oj.service;
 
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mredust.oj.model.dto.problem.ProblemAddRequest;
@@ -16,14 +17,16 @@ import com.mredust.oj.model.vo.ProblemVO;
 public interface ProblemService extends IService<Problem> {
     
     
-    long addProblem(ProblemAddRequest problemAddRequest, long userId);
+    long addProblem(ProblemAddRequest problemAddRequest);
     
     boolean updateProblem(ProblemUpdateRequest problemUpdateRequest);
     
     
-    Page<ProblemVO> getProblemListByPage(ProblemQueryRequest problemQueryRequest, Long userId);
+    
+    Page<Problem> getProblemListByPage(ProblemQueryRequest problemQueryRequest);
     
     
-    ProblemVO objToVo(Problem problem, Long userId);
+    ProblemVO objToVo(Problem problem);
     
+    Page<ProblemVO> getProblemListVoByPage(ProblemQueryRequest problemQueryRequest);
 }

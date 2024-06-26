@@ -29,7 +29,8 @@ public enum ResponseCode {
     
     // oj
     SUBMIT_ERROR(500, "提交判题失败"),
-    DANGER_CODE(401, "危险代码");
+    DANGER_CODE(401, "危险代码"),
+    SUBMIT_TOO_FAST(429,"提交过于频繁,请稍后重试" );
     
     private final int code;
     private final String message;
