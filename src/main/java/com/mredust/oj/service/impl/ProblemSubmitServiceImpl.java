@@ -22,6 +22,7 @@ import com.mredust.oj.model.entity.User;
 import com.mredust.oj.model.enums.problem.JudgeInfoEnum;
 import com.mredust.oj.model.enums.problem.ProblemSubmitStatusEnum;
 import com.mredust.oj.model.vo.ProblemSubmitVO;
+import com.mredust.oj.rabbitmq.MQMessageProducer;
 import com.mredust.oj.service.ProblemService;
 import com.mredust.oj.service.ProblemSubmitService;
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +31,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+
+import static com.mredust.oj.constant.MqConstant.JUDGE_EXCHANGE;
+import static com.mredust.oj.constant.MqConstant.JUDGE_QUEUE_ROUTING_KEY;
 
 
 /**
@@ -50,21 +54,20 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
     @Resource
     private CodeSandboxService codeSandboxService;
     
+    @Resource
+    private MQMessageProducer messageProducer;
+    
     @Override
     public ProblemSubmitVO problemSubmit(ProblemSubmitAddRequest problemSubmitAddRequest, User loginUser) {
-        // 校验编程语言是否合法
         String language = problemSubmitAddRequest.getLanguage();
         if (language == null) {
             throw new BusinessException(ResponseCode.PARAMS_ERROR, "不支持的编程语言");
         }
         long problemId = problemSubmitAddRequest.getProblemId();
-        // 判断实体是否存在，根据类别获取实体
         Problem problem = problemMapper.selectById(problemId);
         if (problem == null) {
             throw new BusinessException(ResponseCode.NOT_FOUND);
         }
-        
-        // 判断用户是否有正在等待或判题的题，如果有，提交判题失败
         Long userId = loginUser.getId();
         ProblemSubmit submit = lambdaQuery().eq(ProblemSubmit::getUserId, userId)
                 .and(wrapper -> wrapper.eq(ProblemSubmit::getStatus, ProblemSubmitStatusEnum.WAITING).or()
@@ -72,11 +75,6 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         if (submit != null) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR, "提交过于频繁！");
         }
-        
-        // 将problem的提交数+1
-        problemMapper.update(null, new UpdateWrapper<Problem>().setSql("submit_num = submit_num + 1").eq("id", problem.getId()));
-        
-        // 是否已提交题目
         // 每个用户串行提交题目
         ProblemSubmit problemSubmit = new ProblemSubmit();
         problemSubmit.setProblemId(problemId);
@@ -90,7 +88,11 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         if (!flag) {
             throw new BusinessException(ResponseCode.SYSTEM_ERROR, "题目状态插入失败");
         }
+        // 将problem的提交数+1
+        problemMapper.update(null, new UpdateWrapper<Problem>().setSql("submit_num = submit_num + 1").eq("id", problem.getId()));
         // 执行判题服务
+        Long problemSubmitId = problemSubmit.getId();
+        messageProducer.sendMessage(JUDGE_EXCHANGE, JUDGE_QUEUE_ROUTING_KEY, problemSubmitId.toString());
         return handleJudge(problemSubmit, problem);
     }
     

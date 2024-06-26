@@ -1,6 +1,7 @@
 package com.mredust.oj.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -29,8 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.mredust.oj.constant.RedisConstant.PROBLEM_KEY;
-import static com.mredust.oj.constant.RedisConstant.TIMEOUT_TTL;
+import static com.mredust.oj.constant.RedisConstant.*;
 import static com.mredust.oj.constant.UserConstant.ADMIN_ROLE;
 
 /**
@@ -168,10 +168,18 @@ public class ProblemController {
      */
     @GetMapping("/language")
     public BaseResponse<List<String>> getLanguageList() {
+        String languageList = redisService.getCacheObject(LANGUAGE_LIST_KEY);
+        if (languageList != null) {
+            List<String> list = JSONUtil.toBean(languageList, new TypeReference<List<String>>() {
+            }, true);
+            return Result.success(list);
+        }
         ArrayList<String> list = new ArrayList<>();
         for (LanguageEnum value : LanguageEnum.values()) {
             list.add(value.getValue());
         }
+        long timeout = TIMEOUT_TTL + RandomUtil.randomLong(1, 10);
+        redisService.setCacheObject(LANGUAGE_LIST_KEY, JSONUtil.toJsonStr(list), timeout, TimeUnit.DAYS);
         return Result.success(list);
     }
 }

@@ -14,8 +14,9 @@ public interface RedisConstant {
      */
     String LIMIT_KEY_PREFIX = "problem:commit:limit:";
     
+    
     // region 题目管理
-   
+    
     /**
      * 题目详细
      */
@@ -25,6 +26,11 @@ public interface RedisConstant {
      * 题目分页
      */
     String PROBLEM_PAGE_KEY = "problem:page:";
+    
+    /**
+     * 语言列表
+     */
+    String LANGUAGE_LIST_KEY = "problem:language:list";
     
     // endregion
 }
