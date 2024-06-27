@@ -1,4 +1,4 @@
-package com.mredust.oj.codesandbox.model.enums;
+package com.mredust.oj.judge.codesandbox.model.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

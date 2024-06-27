@@ -1,7 +1,7 @@
-package com.mredust.oj.codesandbox.core.template;
+package com.mredust.oj.judge.codesandbox.core.template;
 
 import cn.hutool.core.io.FileUtil;
-import com.mredust.oj.codesandbox.utils.ProcessUtils;
+import com.mredust.oj.judge.codesandbox.utils.ProcessUtils;
 import com.mredust.oj.exception.CompilationException;
 import org.springframework.stereotype.Component;
 
@@ -17,8 +17,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.mredust.oj.codesandbox.constant.CodeSandboxConstant.*;
-import static com.mredust.oj.codesandbox.constant.JavaConstant.*;
+import static com.mredust.oj.judge.codesandbox.constant.CodeSandboxConstant.*;
+import static com.mredust.oj.judge.codesandbox.constant.JavaConstant.*;
 
 
 /**

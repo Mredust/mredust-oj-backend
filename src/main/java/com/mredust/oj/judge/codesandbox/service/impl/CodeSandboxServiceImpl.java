@@ -1,11 +1,11 @@
-package com.mredust.oj.codesandbox.service.impl;
+package com.mredust.oj.judge.codesandbox.service.impl;
 
-import com.mredust.oj.codesandbox.core.strategy.SimpleCodeSandboxFactory;
-import com.mredust.oj.codesandbox.core.template.CodeSandboxTemplate;
-import com.mredust.oj.codesandbox.model.dto.ExecuteRequest;
-import com.mredust.oj.codesandbox.model.dto.ExecuteResponse;
-import com.mredust.oj.codesandbox.model.enums.LanguageEnum;
-import com.mredust.oj.codesandbox.service.CodeSandboxService;
+import com.mredust.oj.judge.codesandbox.core.SimpleCodeSandboxFactory;
+import com.mredust.oj.judge.codesandbox.core.template.CodeSandboxTemplate;
+import com.mredust.oj.judge.codesandbox.model.dto.ExecuteRequest;
+import com.mredust.oj.judge.codesandbox.model.dto.ExecuteResponse;
+import com.mredust.oj.judge.codesandbox.model.enums.LanguageEnum;
+import com.mredust.oj.judge.codesandbox.service.CodeSandboxService;
 import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.exception.BusinessException;
 import org.apache.commons.lang3.StringUtils;

@@ -23,7 +23,7 @@ public class RabbitMQConfig {
     public Queue judgeQueue() {
         Queue queue = new Queue(JUDGE_QUEUE);
         queue.addArgument("x-dead-letter-exchange", DL_EXCHANGE);
-        queue.addArgument("x-dead-letter-routing-key", DL_QUEUE_ROUTING_KEY);
+        queue.addArgument("x-dead-letter-routing-key", DL_JUDGE_QUEUE_ROUTING_KEY);
         return queue;
     }
     
@@ -47,7 +47,7 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindingDLQueueWithDLExchange(@Qualifier("dlQueue") Queue queue,
                                                 @Qualifier("dlExchange") DirectExchange directExchange) {
-        return BindingBuilder.bind(queue).to(directExchange).with(DL_QUEUE_ROUTING_KEY);
+        return BindingBuilder.bind(queue).to(directExchange).with(DL_JUDGE_QUEUE_ROUTING_KEY);
     }
     
 }

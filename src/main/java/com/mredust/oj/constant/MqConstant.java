@@ -30,5 +30,5 @@ public interface MqConstant {
     /**
      * 死信队列路由键
      */
-    String DL_QUEUE_ROUTING_KEY = "dl.judge.queue.key";
+    String DL_JUDGE_QUEUE_ROUTING_KEY = "dl.judge.queue.key";
 }

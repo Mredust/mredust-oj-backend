@@ -1,8 +1,8 @@
-package com.mredust.oj.codesandbox.service;
+package com.mredust.oj.judge.codesandbox.service;
 
 
-import com.mredust.oj.codesandbox.model.dto.ExecuteRequest;
-import com.mredust.oj.codesandbox.model.dto.ExecuteResponse;
+import com.mredust.oj.judge.codesandbox.model.dto.ExecuteRequest;
+import com.mredust.oj.judge.codesandbox.model.dto.ExecuteResponse;
 
 /**
  * 执行代码接口

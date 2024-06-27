@@ -1,10 +1,10 @@
-package com.mredust.oj.codesandbox.core.strategy;
+package com.mredust.oj.judge.codesandbox.core;
 
 
-import com.mredust.oj.codesandbox.core.template.CodeSandboxTemplate;
-import com.mredust.oj.codesandbox.core.template.JavaCodeSandbox;
-import com.mredust.oj.codesandbox.core.template.Python3CodeSandbox;
-import com.mredust.oj.codesandbox.model.enums.LanguageEnum;
+import com.mredust.oj.judge.codesandbox.core.template.CodeSandboxTemplate;
+import com.mredust.oj.judge.codesandbox.core.template.JavaCodeSandbox;
+import com.mredust.oj.judge.codesandbox.core.template.Python3CodeSandbox;
+import com.mredust.oj.judge.codesandbox.model.enums.LanguageEnum;
 
 /**
  * 代码沙箱工厂

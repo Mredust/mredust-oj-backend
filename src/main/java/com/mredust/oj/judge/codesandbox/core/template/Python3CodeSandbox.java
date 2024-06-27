@@ -1,8 +1,9 @@
-package com.mredust.oj.codesandbox.core.template;
+package com.mredust.oj.judge.codesandbox.core.template;
 
 import cn.hutool.core.io.FileUtil;
-import com.mredust.oj.codesandbox.utils.ProcessUtils;
+import com.mredust.oj.judge.codesandbox.utils.ProcessUtils;
 import com.mredust.oj.exception.CompilationException;
+import com.mredust.oj.judge.codesandbox.constant.PythonConstant;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -11,9 +12,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.mredust.oj.codesandbox.constant.CodeSandboxConstant.INIT_VALUE;
-import static com.mredust.oj.codesandbox.constant.CodeSandboxConstant.PROBLEM_CLASS_NAME;
-import static com.mredust.oj.codesandbox.constant.PythonConstant.*;
+import static com.mredust.oj.judge.codesandbox.constant.CodeSandboxConstant.INIT_VALUE;
+import static com.mredust.oj.judge.codesandbox.constant.CodeSandboxConstant.PROBLEM_CLASS_NAME;
 
 
 /**
@@ -27,7 +27,7 @@ public class Python3CodeSandbox extends CodeSandboxTemplate {
     
     @Override
     protected File preprocessFile(String parentPath, String code) {
-        String filePath = String.format("%s%s%s%s%s", parentPath, File.separator, UUID.randomUUID(), File.separator, (PROBLEM_CLASS_NAME + PYTHON_SUFFIX));
+        String filePath = String.format("%s%s%s%s%s", parentPath, File.separator, UUID.randomUUID(), File.separator, (PROBLEM_CLASS_NAME + PythonConstant.PYTHON_SUFFIX));
         return FileUtil.writeUtf8String(code, filePath);
     }
     
@@ -36,7 +36,7 @@ public class Python3CodeSandbox extends CodeSandboxTemplate {
     protected String generateTemplateCode(File file) {
         StringBuilder templateCode = new StringBuilder();
         String rootPath = System.getProperty("user.dir");
-        Path pythonFilePath = Paths.get(rootPath, "src", "main", "resources", PYTHON_METHOD_INFO_EXTRACTOR);
+        Path pythonFilePath = Paths.get(rootPath, "src", "main", "resources", PythonConstant.PYTHON_METHOD_INFO_EXTRACTOR);
         String cmd = String.format("python %s %s", pythonFilePath, file.getAbsolutePath());
         String methodInfo = ProcessUtils.processHandler(cmd, INIT_VALUE, INIT_VALUE);
         if (!methodInfo.isEmpty() && Arrays.stream(ERROR_MESSAGE_LIST).anyMatch(methodInfo::contains)) {
@@ -77,12 +77,12 @@ public class Python3CodeSandbox extends CodeSandboxTemplate {
     
     @Override
     protected String mergeCode(String templateCode, String code) {
-        return PYTHON_TYPING_PACKAGE + code + templateCode;
+        return PythonConstant.PYTHON_TYPING_PACKAGE + code + templateCode;
     }
     
     @Override
     protected File saveFile(String code, String parentPath, String fileName) {
-        String filePath = String.format("%s%s%s%s%s", parentPath, File.separator, UUID.randomUUID(), File.separator, (PROBLEM_CLASS_NAME + PYTHON_SUFFIX));
+        String filePath = String.format("%s%s%s%s%s", parentPath, File.separator, UUID.randomUUID(), File.separator, (PROBLEM_CLASS_NAME + PythonConstant.PYTHON_SUFFIX));
         return FileUtil.writeUtf8String(code, filePath);
     }
     
@@ -91,7 +91,7 @@ public class Python3CodeSandbox extends CodeSandboxTemplate {
         List<String> list = new ArrayList<>();
         for (String args : testCaseList) {
             List<String> params = new ArrayList<>();
-            params.add(PYTHON_RUN_CMD);
+            params.add(PythonConstant.PYTHON_RUN_CMD);
             params.add(file.getAbsolutePath());
             params.add(args);
             String cmd = String.join(" ", params);

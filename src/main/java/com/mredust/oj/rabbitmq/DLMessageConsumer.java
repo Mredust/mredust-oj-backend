@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
-import static com.mredust.oj.constant.MqConstant.DL_EXCHANGE;
+import static com.mredust.oj.constant.MqConstant.DL_QUEUE;
 
 
 /**
@@ -30,12 +30,13 @@ public class DLMessageConsumer {
     
     /**
      * 监听死信队列
-     * @param message 消息
-     * @param channel 通道
+     *
+     * @param message     消息
+     * @param channel     通道
      * @param deliveryTag 传送标签
      */
     @SneakyThrows
-    @RabbitListener(queues = DL_EXCHANGE)
+    @RabbitListener(queues = DL_QUEUE)
     public void receiveMessage(String message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         log.info("死信队列接受到的消息：{}", message);
         if (StringUtils.isBlank(message)) {
@@ -50,6 +51,7 @@ public class DLMessageConsumer {
         }
         // 把提交题目标为失败
         problemSubmit.setStatus(ProblemSubmitStatusEnum.FAILED.getCode());
+        problemSubmit.setMessage(ProblemSubmitStatusEnum.FAILED.getStatus());
         boolean update = problemSubmitService.updateById(problemSubmit);
         if (!update) {
             log.info("处理死信队列消息失败,对应提交的题目id为:{}", problemSubmit.getId());

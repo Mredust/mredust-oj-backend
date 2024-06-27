@@ -15,7 +15,7 @@ import com.mredust.oj.model.vo.ProblemSubmitVO;
  */
 public interface ProblemSubmitService extends IService<ProblemSubmit> {
     
-    ProblemSubmitVO problemSubmit(ProblemSubmitAddRequest problemSubmitAddRequest, User loginUser);
+    Long problemSubmit(ProblemSubmitAddRequest problemSubmitAddRequest, User loginUser);
     
     ProblemSubmitVO getProblemSubmitVoById(Long id);
     

@@ -50,13 +50,13 @@ public class ProblemSubmitController {
      * @return 提交记录的 id
      */
     @PostMapping("/execute")
-    public BaseResponse<ProblemSubmitVO> problemSubmit(@RequestBody @NotNull @Valid ProblemSubmitAddRequest problemSubmitAddRequest) {
+    public BaseResponse<Long> problemSubmit(@RequestBody @NotNull @Valid ProblemSubmitAddRequest problemSubmitAddRequest) {
         User loginUser = userService.getLoginUser();
         if (loginUser == null) {
             throw new BusinessException(ResponseCode.NOT_LOGIN);
         }
-        ProblemSubmitVO submitResult = problemSubmitService.problemSubmit(problemSubmitAddRequest, loginUser);
-        return Result.success(submitResult);
+        Long problemSubmitId = problemSubmitService.problemSubmit(problemSubmitAddRequest, loginUser);
+        return Result.success(problemSubmitId);
     }
     
     /**

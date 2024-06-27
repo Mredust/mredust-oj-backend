@@ -1,15 +1,14 @@
-package com.mredust.oj.codesandbox.core.template;
+package com.mredust.oj.judge.codesandbox.core.template;
 
 import cn.hutool.core.io.FileUtil;
-import com.mredust.oj.codesandbox.model.dto.ExecuteResponse;
-import com.mredust.oj.codesandbox.model.enums.ExecuteResponseEnum;
+import com.mredust.oj.judge.codesandbox.model.dto.ExecuteResponse;
+import com.mredust.oj.judge.codesandbox.model.enums.ExecuteResponseEnum;
 import com.mredust.oj.exception.CompilationException;
+import com.mredust.oj.judge.codesandbox.constant.CodeSandboxConstant;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-
-import static com.mredust.oj.codesandbox.constant.CodeSandboxConstant.*;
 
 
 /**
@@ -20,7 +19,7 @@ import static com.mredust.oj.codesandbox.constant.CodeSandboxConstant.*;
 public abstract class CodeSandboxTemplate {
     
     public ExecuteResponse executeCode(String code, List<String> testCaseList) {
-        String parentPath = String.format("%s%s%s", System.getProperty("user.dir"), File.separator, WORK_DIR);
+        String parentPath = String.format("%s%s%s", System.getProperty("user.dir"), File.separator, CodeSandboxConstant.WORK_DIR);
         File file;
         List<String> runMessageList;
         Long[] time = {0L};
@@ -30,7 +29,7 @@ public abstract class CodeSandboxTemplate {
             String templateCode = generateTemplateCode(file);
             clearFile(file);
             String executeCode = mergeCode(templateCode, code);
-            file = saveFile(executeCode, parentPath, MAIN_CLASS_NAME);
+            file = saveFile(executeCode, parentPath, CodeSandboxConstant.MAIN_CLASS_NAME);
             runMessageList = runCode(file, testCaseList, time, memory);
         } catch (CompilationException e) {
             return getExecuteResponse(ExecuteResponseEnum.COMPILE_ERROR, e.getMessage());
@@ -66,7 +65,7 @@ public abstract class CodeSandboxTemplate {
     }
     
     private ExecuteResponse getExecuteResponse(ExecuteResponseEnum executeResponseEnum, String msg) {
-        return getExecuteResponse(executeResponseEnum, true, msg, INIT_VALUE, INIT_VALUE, Collections.emptyList());
+        return getExecuteResponse(executeResponseEnum, true, msg, CodeSandboxConstant.INIT_VALUE, CodeSandboxConstant.INIT_VALUE, Collections.emptyList());
     }
     
     @SafeVarargs

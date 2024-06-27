@@ -1,4 +1,4 @@
-package com.mredust.oj.codesandbox.constant;
+package com.mredust.oj.judge.codesandbox.constant;
 
 /**
  * @author <a href="https://github.com/Mredust">Mredust</a>

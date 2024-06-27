@@ -1,4 +1,4 @@
-package com.mredust.oj.codesandbox.utils;
+package com.mredust.oj.judge.codesandbox.utils;
 
 import com.mredust.oj.exception.CompilationException;
 import org.springframework.util.StopWatch;

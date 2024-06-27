@@ -19,7 +19,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -152,10 +151,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return 用户
      */
     @Override
-    public User getLoginUser( ) {
-        // 先判断是否已登录
-        Object userObj = StpUtil.getSession().get(USER_LOGIN_KEY);
-        User currentUser = (User) userObj;
+    public User getLoginUser() {
+        User currentUser;
+        try {
+            // 先判断是否已登录
+            currentUser = (User) StpUtil.getSession().get(USER_LOGIN_KEY);
+        } catch (Exception e) {
+            throw new BusinessException(ResponseCode.NOT_LOGIN);
+        }
         if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ResponseCode.NOT_LOGIN);
         }
