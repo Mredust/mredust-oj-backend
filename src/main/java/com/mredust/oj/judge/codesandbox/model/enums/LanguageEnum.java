@@ -9,9 +9,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum LanguageEnum {
-    JAVA("Java", "java"),
+    JAVA("java", "java"),
     
-    PYTHON("Python3", "python3");
+    PYTHON("python", "python");
     
     private final String language;
     

@@ -122,11 +122,19 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     
     
     @Override
-    public Page<Problem> getProblemListByPage(ProblemQueryRequest problemQueryRequest) {
+    public Page<ProblemVO> getProblemListByPage(ProblemQueryRequest problemQueryRequest) {
         long pageNum = problemQueryRequest.getPageNum();
         long pageSize = problemQueryRequest.getPageSize();
         Page<Problem> page = new Page<>(pageNum, pageSize);
-        return conditionQueryWrapper(problemQueryRequest).page(page);
+        Page<ProblemVO> problemVOPage = new Page<>(pageNum, pageSize);
+        Page<Problem> problemPage = conditionQueryWrapper(problemQueryRequest).page(page);
+        List<Problem> problemList = problemPage.getRecords();
+        List<ProblemVO> problemVOList = problemList.stream()
+                .map(this::objToVo)
+                .collect(Collectors.toList());
+        problemVOPage.setRecords(problemVOList);
+        problemVOPage.setTotal(problemPage.getTotal());
+        return problemVOPage;
     }
     
     
@@ -163,11 +171,12 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                     .stream().map(ProblemSubmit::getProblemId)
                     .collect(Collectors.toSet());
         }
-      
+        
         Page<Problem> problemPage = conditionQueryWrapper(problemQueryRequest)
                 .in(!submitIds.isEmpty(), Problem::getId, submitIds)
                 .page(new Page<>(pageNum, pageSize));
-        List<ProblemVO> problemVOList = problemPage.getRecords().stream()
+        List<Problem> problemList = problemPage.getRecords();
+        List<ProblemVO> problemVOList = problemList.stream()
                 .map(this::objToVo)
                 .collect(Collectors.toList());
         problemVOPage.setRecords(problemVOList);
@@ -198,8 +207,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                     .select("max(status) as status").lambda()
                     .eq(ProblemSubmit::getProblemId, problem.getId())
                     .eq(ProblemSubmit::getUserId, userId));
-            Integer problemSubmitStatus = problemSubmit.getStatus();
-            if (problemSubmitStatus != null) {
+         
+            if (problemSubmit != null) {
+                Integer problemSubmitStatus = problemSubmit.getStatus();
                 String text = ProblemSubmitStatusEnum.getProblemSubmitTextByCode(problemSubmitStatus);
                 problemVo.setStatus(text);
             } else {

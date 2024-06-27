@@ -23,14 +23,15 @@ public class ProblemSubmitQueryRequest extends PageRequest implements Serializab
     private Integer status;
     
     /**
-     * 题目 id
+     * 提交状态
      */
-    private Long questionId;
+    private String message;
     
     /**
-     * 用户 id
+     * 题目 id
      */
-    private Long userId;
+    private Long problemId;
+    
     
     
     private static final long serialVersionUID = 1L;

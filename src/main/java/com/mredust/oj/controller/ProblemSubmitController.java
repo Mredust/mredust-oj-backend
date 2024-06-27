@@ -1,6 +1,9 @@
 package com.mredust.oj.controller;
 
 
+import cn.hutool.core.lang.TypeReference;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mredust.oj.common.BaseResponse;
 import com.mredust.oj.common.ResponseCode;
@@ -10,7 +13,9 @@ import com.mredust.oj.config.redisson.RedissonService;
 import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.model.dto.problemsubmit.ProblemSubmitAddRequest;
 import com.mredust.oj.model.dto.problemsubmit.ProblemSubmitQueryRequest;
+import com.mredust.oj.model.entity.ProblemSubmit;
 import com.mredust.oj.model.entity.User;
+import com.mredust.oj.model.enums.problem.JudgeInfoEnum;
 import com.mredust.oj.model.vo.ProblemSubmitVO;
 import com.mredust.oj.service.ProblemSubmitService;
 import com.mredust.oj.service.UserService;
@@ -21,8 +26,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import static com.mredust.oj.constant.RedisConstant.LIMIT_KEY_PREFIX;
+import static com.mredust.oj.constant.RedisConstant.*;
 
 
 /**
@@ -86,14 +94,35 @@ public class ProblemSubmitController {
      * @param problemSubmitQueryRequest
      * @return
      */
-    @PostMapping("/page/vo")
-    public BaseResponse<Page<ProblemSubmitVO>> getProblemSubmitListByPage(@RequestBody ProblemSubmitQueryRequest problemSubmitQueryRequest) {
+    @PostMapping("/list")
+    public BaseResponse<Page<ProblemSubmit>> getProblemSubmitListByPage(@RequestBody ProblemSubmitQueryRequest problemSubmitQueryRequest) {
         if (problemSubmitQueryRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
-        Page<ProblemSubmitVO> page = problemSubmitService.getProblemSubmitListByPage(problemSubmitQueryRequest);
+        Page<ProblemSubmit> page = problemSubmitService.getProblemSubmitListByPage(problemSubmitQueryRequest);
         return Result.success(page);
     }
     
+    /**
+     * 获取提交状态列表
+     *
+     * @return
+     */
+    @GetMapping("/status")
+    public BaseResponse<List<String>> getSubmitStatusList() {
+        String statusList = redisService.getCacheObject(STATUS_LIST_KEY);
+        if (statusList != null) {
+            List<String> list = JSONUtil.toBean(statusList, new TypeReference<List<String>>() {
+            }, true);
+            return Result.success(list);
+        }
+        ArrayList<String> list = new ArrayList<>();
+        for (JudgeInfoEnum value : JudgeInfoEnum.values()) {
+            list.add(value.getText());
+        }
+        long timeout = TIMEOUT_TTL + RandomUtil.randomLong(1, 10);
+        redisService.setCacheObject(STATUS_LIST_KEY, JSONUtil.toJsonStr(list), timeout, TimeUnit.DAYS);
+        return Result.success(list);
+    }
     
 }

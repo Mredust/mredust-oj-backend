@@ -87,9 +87,9 @@ public class JudgeServiceImpl implements JudgeService {
         
         
         if (runTime > problemRunTime) {
-            handleSubmissionStatus(updateSubmitInfo, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.TIME_LIMIT_EXCEEDED.getText());
+            handleSubmissionStatus(updateSubmitInfo, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.OUT_OF_TIME_LiMIT.getText());
         } else if (runMemory > problemRunMemory) {
-            handleSubmissionStatus(updateSubmitInfo, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.MEMORY_LIMIT_EXCEEDED.getText());
+            handleSubmissionStatus(updateSubmitInfo, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.OUT_OF_MEMORY_LIMIT.getText());
         } else {
             if (statusCode.equals(ExecuteResponseEnum.RUN_SUCCESS.getCode())) {
                 boolean allTestCasesPassed = true;
@@ -106,7 +106,7 @@ public class JudgeServiceImpl implements JudgeService {
                     }
                 }
                 if (allTestCasesPassed) {
-                    handleSubmissionStatus(updateSubmitInfo, ProblemSubmitStatusEnum.SUCCEED, JudgeInfoEnum.ACCEPTED.getText());
+                    handleSubmissionStatus(updateSubmitInfo, ProblemSubmitStatusEnum.SUCCEED, JudgeInfoEnum.EXECUTION_PASS.getText());
                     problemMapper.update(null, new UpdateWrapper<Problem>().setSql("accepted_num = accepted_num + 1").eq("id", problem.getId()));
                 } else {
                     handleSubmissionStatus(updateSubmitInfo, ProblemSubmitStatusEnum.FAILED, JudgeInfoEnum.WRONG_ANSWER.getText());

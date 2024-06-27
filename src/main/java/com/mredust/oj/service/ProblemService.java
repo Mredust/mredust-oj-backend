@@ -23,7 +23,7 @@ public interface ProblemService extends IService<Problem> {
     
     
     
-    Page<Problem> getProblemListByPage(ProblemQueryRequest problemQueryRequest);
+    Page<ProblemVO> getProblemListByPage(ProblemQueryRequest problemQueryRequest);
     
     
     ProblemVO objToVo(Problem problem);

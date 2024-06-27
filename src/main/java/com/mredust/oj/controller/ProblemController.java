@@ -16,6 +16,7 @@ import com.mredust.oj.model.dto.problem.ProblemAddRequest;
 import com.mredust.oj.model.dto.problem.ProblemQueryRequest;
 import com.mredust.oj.model.dto.problem.ProblemUpdateRequest;
 import com.mredust.oj.model.entity.Problem;
+import com.mredust.oj.model.enums.problem.JudgeInfoEnum;
 import com.mredust.oj.model.vo.ProblemVO;
 import com.mredust.oj.service.ProblemService;
 import com.mredust.oj.service.UserService;
@@ -136,11 +137,11 @@ public class ProblemController {
      */
     @PostMapping("/list")
     @SaCheckRole(ADMIN_ROLE)
-    public BaseResponse<Page<Problem>> getProblemListByPage(@RequestBody ProblemQueryRequest problemQueryRequest) {
+    public BaseResponse<Page<ProblemVO>> getProblemListByPage(@RequestBody ProblemQueryRequest problemQueryRequest) {
         if (problemQueryRequest == null) {
             throw new BusinessException(ResponseCode.PARAMS_NULL);
         }
-        Page<Problem> problemPage = problemService.getProblemListByPage(problemQueryRequest);
+        Page<ProblemVO> problemPage = problemService.getProblemListByPage(problemQueryRequest);
         return Result.success(problemPage);
     }
     
@@ -182,4 +183,6 @@ public class ProblemController {
         redisService.setCacheObject(LANGUAGE_LIST_KEY, JSONUtil.toJsonStr(list), timeout, TimeUnit.DAYS);
         return Result.success(list);
     }
+    
+  
 }

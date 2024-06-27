@@ -19,5 +19,5 @@ public interface ProblemSubmitService extends IService<ProblemSubmit> {
     
     ProblemSubmitVO getProblemSubmitVoById(Long id);
     
-    Page<ProblemSubmitVO> getProblemSubmitListByPage(ProblemSubmitQueryRequest problemSubmitQueryRequest);
+    Page<ProblemSubmit> getProblemSubmitListByPage(ProblemSubmitQueryRequest problemSubmitQueryRequest);
 }

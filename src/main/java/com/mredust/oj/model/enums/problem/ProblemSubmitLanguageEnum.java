@@ -12,10 +12,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ProblemSubmitLanguageEnum {
     
-    JAVA("Java", "java"),
-    CPLUSPLUS("C++", "cpp"),
-    GOLANG("JavaScript", "javascript"),
-    PYTHON("Python3", "python3");
+    JAVA("java", "java"),
+    PYTHON("python", "python");
     private final String language;
     
     private final String value;

@@ -16,17 +16,16 @@ import java.util.stream.Collectors;
 @Getter
 @AllArgsConstructor
 public enum JudgeInfoEnum {
-    ACCEPTED("通过！", "Accepted"),
-    WRONG_ANSWER("输出结果与预期不符！", "Wrong Answer"),
-    COMPILE_ERROR("未通过编译！", "Compile Error"),
-    MEMORY_LIMIT_EXCEEDED("内存溢出！", "Out of Memory"),
-    TIME_LIMIT_EXCEEDED("运行时间超出限制！", "Time Limit Exceeded"),
-    PRESENTATION_ERROR("展示错误！", "Presentation Error"),
-    WAITING("等待中！", "Waiting"),
-    OUTPUT_LIMIT_EXCEEDED("输出溢出！", "Output Limit Exceeded"),
-    DANGEROUS_OPERATION("危险操作！", "Dangerous Operation"),
-    RUNTIME_ERROR("运行错误！", "Runtime Error"),
-    SYSTEM_ERROR("系统错误！", "System Error");
+    EXECUTION_PASS("执行通过", "Execution Pass"),
+    WRONG_ANSWER("错误解答", "Wrong Answer"),
+    OUT_OF_MEMORY_LIMIT("超出内存限制", "Out of Memory"),
+    OUT_OF_TIME_LiMIT("超出时间限制", "Time Limit Exceeded"),
+    OUT_OF_OUTPUT_LIMIT("超出输出限制", "Output Limit Exceeded"),
+    COMPILE_ERROR("编译出错", "Compile Error"),
+    EXECUTION_ERROR("执行出错", "Execution Error"),
+    TIME_OUT("超时", "Time Out"),
+    INTERNAL_ERROR("内部出错", "Internal Error");
+    
     
     private final String text;
     private final String value;

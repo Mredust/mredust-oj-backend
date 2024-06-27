@@ -80,7 +80,7 @@ knife4j:
           - com.mredust.oj.controller
 
 sa-token:
-  token-name: mredustoken
+  token-name: Authorization
   # token 过期时间7天（单位：秒）
   timeout: 604800
   # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结

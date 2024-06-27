@@ -31,6 +31,10 @@ public interface RedisConstant {
      * 语言列表
      */
     String LANGUAGE_LIST_KEY = "problem:language:list";
+    /**
+     * 状态列表
+     */
+    String STATUS_LIST_KEY = "problem:status:list";
     
     // endregion
 }

@@ -3,6 +3,7 @@ package com.mredust.oj.rabbitmq;
 import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.exception.BusinessException;
 import com.mredust.oj.model.entity.ProblemSubmit;
+import com.mredust.oj.model.enums.problem.JudgeInfoEnum;
 import com.mredust.oj.model.enums.problem.ProblemSubmitStatusEnum;
 import com.mredust.oj.service.ProblemSubmitService;
 import com.rabbitmq.client.Channel;
@@ -51,7 +52,7 @@ public class DLMessageConsumer {
         }
         // 把提交题目标为失败
         problemSubmit.setStatus(ProblemSubmitStatusEnum.FAILED.getCode());
-        problemSubmit.setMessage(ProblemSubmitStatusEnum.FAILED.getStatus());
+        problemSubmit.setMessage(JudgeInfoEnum.WRONG_ANSWER.getText());
         boolean update = problemSubmitService.updateById(problemSubmit);
         if (!update) {
             log.info("处理死信队列消息失败,对应提交的题目id为:{}", problemSubmit.getId());
