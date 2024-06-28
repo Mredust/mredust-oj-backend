@@ -5,18 +5,18 @@ import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.mredust.oj.judge.codesandbox.model.enums.LanguageEnum;
 import com.mredust.oj.common.BaseResponse;
 import com.mredust.oj.common.DeleteRequest;
 import com.mredust.oj.common.ResponseCode;
 import com.mredust.oj.common.Result;
 import com.mredust.oj.config.redis.RedisService;
 import com.mredust.oj.exception.BusinessException;
+import com.mredust.oj.judge.codesandbox.model.enums.LanguageEnum;
 import com.mredust.oj.model.dto.problem.ProblemAddRequest;
 import com.mredust.oj.model.dto.problem.ProblemQueryRequest;
 import com.mredust.oj.model.dto.problem.ProblemUpdateRequest;
+import com.mredust.oj.model.dto.problem.TemplateCode;
 import com.mredust.oj.model.entity.Problem;
-import com.mredust.oj.model.enums.problem.JudgeInfoEnum;
 import com.mredust.oj.model.vo.ProblemVO;
 import com.mredust.oj.service.ProblemService;
 import com.mredust.oj.service.UserService;
@@ -168,21 +168,25 @@ public class ProblemController {
      * @return 语言列表
      */
     @GetMapping("/language")
-    public BaseResponse<List<String>> getLanguageList() {
+    public BaseResponse<List<TemplateCode>> getLanguageList() {
         String languageList = redisService.getCacheObject(LANGUAGE_LIST_KEY);
         if (languageList != null) {
-            List<String> list = JSONUtil.toBean(languageList, new TypeReference<List<String>>() {
+            List<TemplateCode> list = JSONUtil.toBean(languageList, new TypeReference<List<TemplateCode>>() {
             }, true);
             return Result.success(list);
         }
-        ArrayList<String> list = new ArrayList<>();
+        ArrayList<TemplateCode> list = new ArrayList<>();
         for (LanguageEnum value : LanguageEnum.values()) {
-            list.add(value.getValue());
+            TemplateCode templateCode = new TemplateCode();
+            templateCode.setLanguage(value.getLanguage());
+            templateCode.setValue(value.getValue());
+            templateCode.setCode(value.getTemplate());
+            list.add(templateCode);
         }
         long timeout = TIMEOUT_TTL + RandomUtil.randomLong(1, 10);
         redisService.setCacheObject(LANGUAGE_LIST_KEY, JSONUtil.toJsonStr(list), timeout, TimeUnit.DAYS);
         return Result.success(list);
     }
     
-  
+    
 }

@@ -125,9 +125,13 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     public Page<ProblemVO> getProblemListByPage(ProblemQueryRequest problemQueryRequest) {
         long pageNum = problemQueryRequest.getPageNum();
         long pageSize = problemQueryRequest.getPageSize();
+        String title = problemQueryRequest.getTitle();
+        
         Page<Problem> page = new Page<>(pageNum, pageSize);
         Page<ProblemVO> problemVOPage = new Page<>(pageNum, pageSize);
-        Page<Problem> problemPage = conditionQueryWrapper(problemQueryRequest).page(page);
+        Page<Problem> problemPage = conditionQueryWrapper(problemQueryRequest)
+                .like(StringUtils.isNotBlank(title), Problem::getTitle, title)
+                .page(page);
         List<Problem> problemList = problemPage.getRecords();
         List<ProblemVO> problemVOList = problemList.stream()
                 .map(this::objToVo)
@@ -171,7 +175,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                     .stream().map(ProblemSubmit::getProblemId)
                     .collect(Collectors.toSet());
         }
-        
         Page<Problem> problemPage = conditionQueryWrapper(problemQueryRequest)
                 .in(!submitIds.isEmpty(), Problem::getId, submitIds)
                 .page(new Page<>(pageNum, pageSize));
@@ -207,17 +210,16 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                     .select("max(status) as status").lambda()
                     .eq(ProblemSubmit::getProblemId, problem.getId())
                     .eq(ProblemSubmit::getUserId, userId));
-         
+            
             if (problemSubmit != null) {
                 Integer problemSubmitStatus = problemSubmit.getStatus();
-                String text = ProblemSubmitStatusEnum.getProblemSubmitTextByCode(problemSubmitStatus);
-                problemVo.setStatus(text);
+                problemVo.setStatus(problemSubmitStatus);
             } else {
-                problemVo.setStatus(ProblemSubmitStatusEnum.WAITING.getText());
+                problemVo.setStatus(ProblemSubmitStatusEnum.WAITING.getCode());
             }
             return problemVo;
         }
-        problemVo.setStatus(ProblemSubmitStatusEnum.WAITING.getText());
+        problemVo.setStatus(ProblemSubmitStatusEnum.WAITING.getCode());
         return problemVo;
     }
     

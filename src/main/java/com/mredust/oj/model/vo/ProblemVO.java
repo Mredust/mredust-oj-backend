@@ -39,7 +39,7 @@ public class ProblemVO implements Serializable {
     /**
      * 状态（已通过、尝试过、未开始）
      */
-    private String status;
+    private Integer status;
     
     /**
      * 标签列表

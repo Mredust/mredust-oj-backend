@@ -9,11 +9,12 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum LanguageEnum {
-    JAVA("java", "java"),
-    
-    PYTHON("python", "python");
-    
+    JAVA("Java", "java", "class Solution {\n\n}"),
+    PYTHON("Python3", "python", "class Solution:"),
+    C("C", "c", "");
     private final String language;
     
     private final String value;
+    
+    private final String template;
 }

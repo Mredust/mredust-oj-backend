@@ -12,9 +12,13 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ProblemSubmitLanguageEnum {
     
-    JAVA("java", "java"),
-    PYTHON("python", "python");
+    JAVA("java", "java","class Solution {\n\n}"),
+    PYTHON("python", "python","class Solution:");
     private final String language;
     
     private final String value;
+    
+    private final String template;
+    
+    
 }

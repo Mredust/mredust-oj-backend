@@ -25,10 +25,10 @@ public class PageRequest implements Serializable {
     /**
      * 排序字段
      */
-    private String sortField;
+    private String sortField = "create_time";
     
     /**
      * 排序方式
      */
-    private String sortOrder = CommonConstant.ASC;
+    private String sortOrder = CommonConstant.DESC;
 }

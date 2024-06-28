@@ -19,6 +19,12 @@ public class ProblemQueryRequest extends PageRequest implements Serializable {
      * 题目id
      */
     private Long id;
+    
+    /**
+     * 标题
+     */
+    private String title;
+    
     /**
      * 关键词
      */
